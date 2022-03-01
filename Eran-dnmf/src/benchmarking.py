@@ -6,13 +6,14 @@ import torch
 import numpy as np
 
 
-def writeMatrix(Matrix, File):
+def writeMatrix(Matrix, File, use_t=True):
     fstream = open(File, "w+")
     for line in Matrix:
-        try:
-            line = "\t".join([line[0]] + [str(round(float(m), 6)) for m in line[1:]])
-        except:
-            line = "\t".join([str(m) for m in line])
+        if use_t:
+            try:
+                line = "\t".join([line[0]] + [str(round(float(m), 6)) for m in line[1:]])
+            except:
+                line = "\t".join([str(m) for m in line])
 
         fstream.write(line)
         fstream.write("\n")
