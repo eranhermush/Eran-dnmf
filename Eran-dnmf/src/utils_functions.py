@@ -139,8 +139,9 @@ def main(signature_names):
             generate_resources_main(gedit_signature_folder, resources_folder, signature_gedit_name)
             train_model(signature_gedit_name, resources_folder[:-1], output_folder)
 
+
 if __name__ == '__main__':
-    #main(["LM22-Full"])
-    #main(["HPCA-Stromal"])
-    #main(["10XImmune"])
+    # main(["LM22-Full"])
+    # main(["HPCA-Stromal"])
+    # main(["10XImmune"])
     main(["HPCA-Blood"])

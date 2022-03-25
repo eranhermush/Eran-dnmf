@@ -98,8 +98,11 @@ def writeMatrix(Matrix, File):
   fstream.close()
   return
 
-def RescaleRows(Ref, Mix, power):
-  Combined = [Ref[z] + Mix[z][1:] for z in range(len(Mix))]
+def RescaleRows(Ref, Mix, power, use_mix1=True):
+  if use_mix1:
+    Combined = [Ref[z] + Mix[z][1:] for z in range(len(Mix))]
+  else:
+    Combined = [Ref[z] + Mix[z] for z in range(len(Mix))]
   Scaled = Rescale_ZeroToOne(Combined, power)
   ScaledMix = []
   ScaledRef = []

@@ -50,8 +50,8 @@ def main_train_on_real_data():
             # ref_data[:, :-1][5], ref_data[5]
             # ref_object = torch.from_numpy(read_dataset_data(ref_object_formated)[1:, 1:].astype(float)).float()
 
-            genes_in_ref = ref_object[0][1:]
-            genes_names = [g[0] for g in mix_object[1:]]
+            # genes_in_ref = ref_object[0][1:]
+            # genes_names = [g[0] for g in mix_object[1:]]
             # ref_data = np.asanyarray(ref_object)[1:, 1:].astype(float)
 
             mix_data = np.asanyarray(mix_object)
@@ -92,9 +92,8 @@ def main_train_on_real_data():
                     read_dataset_data(data_formated)[1:, 1:].astype(float)).float()[:, :-1]
 
                 loss_values = train_supervised_one_sample_reformat(converted_mix_data.T, dist_train_i_formated,
-                                                                   n_components, genes_in_ref, n_iter,
-                                                                   deep_nmf, optimizerADAM, mix_true_prop_path, False,
-                                                                   print_every=200)
+                    n_components, deep_nmf, optimizerADAM, False, print_every=200)
+
                 print(f"Start train index: {train_index} with loss: {loss_values[-1]}")
 
             output_path = f"{mix_signature_folder}/dnmf$train$datasetW0_{mix_name}_{ref_name}.tsv"

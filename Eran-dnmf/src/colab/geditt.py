@@ -3,7 +3,7 @@ from gedit_preprocess.MatrixTools import RescaleRows, getSharedRows, remove0s, q
 from gedit_preprocess.getSigGenesModal import returnSigMatrix
 
 
-def run_gedit_pre1(rawMix, rawRef):
+def run_gedit_pre1(rawMix, rawRef, use_all_genes=False):
     """
     usage default:
     python ThisScript.py -mix SamplesMat.tsv -ref RefMat.tsv
@@ -56,8 +56,11 @@ def run_gedit_pre1(rawMix, rawRef):
     # MatrixTools.writeMatrix([CTNames] + normRef, scratchSpace + "NormRef.tsv")
     # MatrixTools.writeMatrix([SampleNames] + normMix, scratchSpace + "NormMix.tsv")
 
-    SigRef = returnSigMatrix([CTNames] + sharedRef, \
+    if not use_all_genes:
+        SigRef = returnSigMatrix([CTNames] + sharedRef, \
                                               SigsPerCT, TotalSigs, SigMethod)
+    else:
+        SigRef = sharedRef
 
     SigMix, SigRef = getSharedRows(sharedMix, SigRef)
 
@@ -67,7 +70,8 @@ def run_gedit_pre1(rawMix, rawRef):
     """
 
     # eran:   MatrixTools.writeMatrix([CTNames] + SigRef, scratchSpace + "SigRef.tsv")
-    ScaledRef, ScaledMix = RescaleRows(SigRef[1:], SigMix[1:], RowScaling)
+    # ScaledRef, ScaledMix = RescaleRows(SigRef[1:], SigMix[1:], RowScaling)
+    ScaledRef, ScaledMix = RescaleRows(SigRef, SigMix, RowScaling)
 
     ScaledRef = [CTNames] + ScaledRef
     ScaledMix = [SampleNames] + ScaledMix
