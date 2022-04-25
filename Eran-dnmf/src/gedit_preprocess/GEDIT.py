@@ -5,7 +5,7 @@ from os.path import isfile, join
 from gedit_preprocess import HandleInput, MatrixTools, getSigGenesModal
 
 
-def run_gedit_pre(rawMix, rawRef, scratchSpace, use_all_genes=False):
+def run_gedit_pre(rawMix, rawRef, scratchSpace, use_all_genes=False, NumSigs=None):
     """
     usage default:
     python ThisScript.py -mix SamplesMat.tsv -ref RefMat.tsv
@@ -18,6 +18,8 @@ def run_gedit_pre(rawMix, rawRef, scratchSpace, use_all_genes=False):
     #scratchSpace = curDir + "scratch/"
 
     args_input = ["-mix", rawMix, "-ref", rawRef]
+    if NumSigs is not None:
+        args_input.extend(["-NumSigs", NumSigs])
     myArgs = HandleInput.checkInputs(args_input)
 
     rawMix = myArgs[0]
@@ -112,7 +114,7 @@ def readInPredictions(fname):
     return predictions
 
 
-def gedit_main(ref_folder, mix_folder, output_folder, use_all_genes=False, signature_name=None):
+def gedit_main(ref_folder, mix_folder, output_folder, use_all_genes=False, signature_name=None, NumSigs=None):
     ref_files = [f"{ref_folder}/{f}" for f in listdir(ref_folder) if isfile(join(ref_folder, f))]
     if signature_name:
         ref_files = [f for f in ref_files if signature_name in f]
@@ -121,12 +123,12 @@ def gedit_main(ref_folder, mix_folder, output_folder, use_all_genes=False, signa
     for ref in ref_files:
         for mix in mix_files:
             print("Working in ref=" + ref, " mix = " + mix)
-            run_gedit_pre(mix, ref, output_folder, use_all_genes)
+            run_gedit_pre(mix, ref, output_folder, use_all_genes, NumSigs)
 
 
 if __name__ == '__main__':
-    REF_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/RefMats/"
-    MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/Mixes/"
-    output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.2_model/new_gedit_data/"
-    use_all_genes = True
-    gedit_main(REF_FOLDER, MIX_FOLDER, output, use_all_genes=use_all_genes)
+    REF_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/ref_mat_2/"
+    MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/Nmf-Objects-2"
+    output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/gedit_data/Yes/"
+    #NumSigs = 500
+    gedit_main(REF_FOLDER, MIX_FOLDER, output)#, NumSigs=str(NumSigs))

@@ -3,7 +3,7 @@ from gedit_preprocess.MatrixTools import RescaleRows, getSharedRows, remove0s, q
 from gedit_preprocess.getSigGenesModal import returnSigMatrix
 
 
-def run_gedit_pre1(rawMix, rawRef, use_all_genes=False):
+def run_gedit_pre1(rawMix, rawRef, use_all_genes=False, NumSigs=None):
     """
     usage default:
     python ThisScript.py -mix SamplesMat.tsv -ref RefMat.tsv
@@ -16,6 +16,8 @@ def run_gedit_pre1(rawMix, rawRef, use_all_genes=False):
     #scratchSpace = curDir + "scratch/"
 
     args_input = ["-mix", rawMix, "-ref", rawRef]
+    if NumSigs is not None:
+        args_input.extend(["-NumSigs", NumSigs])
     myArgs = checkInputs(args_input)
 
     rawMix = myArgs[0]

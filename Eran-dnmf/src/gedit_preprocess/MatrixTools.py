@@ -86,7 +86,8 @@ def readMatrix(File):
 
 def writeMatrix(Matrix, File):
   os.umask(000)
-  fstream = open(File,"w+")
+  os.makedirs(os.path.dirname(File), exist_ok=True)
+  fstream = open(File, "w+")
   for line in Matrix:
     try:
       line = "\t".join([line[0]] + [str(round(float(m),6)) for m in line[1:]])

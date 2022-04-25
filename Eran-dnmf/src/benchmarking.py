@@ -1,3 +1,4 @@
+import os
 from os import listdir
 from os.path import isfile, join
 
@@ -7,6 +8,7 @@ import numpy as np
 
 
 def writeMatrix(Matrix, File, use_t=True):
+    os.makedirs(os.path.dirname(File), exist_ok=True)
     fstream = open(File, "w+")
     for line in Matrix:
         if use_t:

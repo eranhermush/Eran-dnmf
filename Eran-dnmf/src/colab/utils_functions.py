@@ -7,9 +7,13 @@ from torch import nn, optim
 
 from benchmarking import writeMatrix
 from colab.converter import main_format
+from layers.unsuper_layer import EPSILON
 
 from layers.unsuper_net import UnsuperNet
 from scipy.optimize import nnls
+from datetime import datetime
+
+from layers.unsuper_net_new import UnsuperNetNew
 
 inf = math.inf
 
@@ -51,7 +55,7 @@ def train_unsupervised(
         deep_nmf = UnsuperNet(num_layers, n_components, features, 0, 0)
 
     for w in deep_nmf.parameters():
-            w.data.fill_(0.1)
+        w.data.fill_(0.1)
 
     if ref_data is not None:
         deep_nmf_params = list(deep_nmf.parameters())
@@ -62,8 +66,9 @@ def train_unsupervised(
             elif w_index == 1:
                 w.data = ref_data.T
 
-        h_0_train = tensoring(np.asanyarray([np.random.dirichlet([1 for i in range(n_components)]) for i in range(samples)],
-                         dtype=np.float))
+        h_0_train = tensoring(
+            np.asanyarray([np.random.dirichlet([1 for i in range(n_components)]) for i in range(samples)],
+                          dtype=np.float))
 
     # initialize parameters
     dnmf_w = w_init
@@ -74,8 +79,8 @@ def train_unsupervised(
     dnmf_train_cost = []
     for i in range(network_train_iterations):
         out = deep_nmf(*inputs)
-        out = out / torch.clamp(out.sum(axis=1)[:, None], min=1e-12) # maybe you can insert into the net
-        #out = tensoring(np.where(out.sum(axis=1)[:, None] != 0, (out / out.sum(axis=1)[:, None]).detach().numpy(), 0))
+        out = out / torch.clamp(out.sum(axis=1)[:, None], min=1e-12)  # maybe you can insert into the net
+        # out = tensoring(np.where(out.sum(axis=1)[:, None] != 0, (out / out.sum(axis=1)[:, None]).detach().numpy(), 0))
 
         loss = cost_tns(v_train, dnmf_w, out, l_1, l_2)
 
@@ -99,6 +104,122 @@ def train_unsupervised(
         dnmf_train_cost.append(loss.item())
 
     return deep_nmf, dnmf_train_cost, dnmf_w, out
+
+
+def train_unsupervised_new(
+        v_train,
+        num_layers,
+        network_train_iterations,
+        n_components,
+        verbose=True,
+        lr=0.005,
+        l_1=0,
+        l_2=0,
+        include_reg=True,
+        ref_data=None,
+        w1_opt=None,
+        dist_mix_i=None
+):
+    print(f'start time: {datetime.now().strftime("%d-%m, %H:%M:%S")}')
+    samples, features = v_train.shape
+    h_0_train = tensoring(np.ones((samples, n_components)))
+    w_init = tensoring(np.ones((n_components, features)) / features)
+    # build the architicture
+    if include_reg:
+        deep_nmf = UnsuperNetNew(num_layers, n_components, features, l_1, l_2)
+    else:
+        deep_nmf = UnsuperNetNew(num_layers, n_components, features, 0, 0)
+
+    for w in deep_nmf.parameters():
+        w.data = (2 + torch.randn(w.data.shape, dtype=w.data.dtype)) * np.sqrt(2. / w.data.shape[0]) * 150
+    # for w in deep_nmf.parameters():
+    #     w.data.fill_(0.1)
+
+    deep_nmf_params = list(deep_nmf.parameters())
+    if ref_data is not None:
+        for w_index in range(len(deep_nmf_params)):
+            w = deep_nmf_params[w_index]
+            if w_index == 0:
+                w.data = torch.from_numpy(np.dot(ref_data.T, ref_data)).float()
+            elif w_index == 1:
+                w.data = ref_data.T
+
+    h_0_train = tensoring(
+        np.asanyarray([np.random.dirichlet(np.random.randint(1,20 ,size=n_components)) for i in range(samples)],
+                      dtype=np.float))
+
+    # initialize parameters
+    dnmf_w = w_init
+
+    optimizerADAM = optim.Adam(deep_nmf.parameters(), lr=lr)
+    # Train the Network
+    inputs = (h_0_train, v_train)
+    dnmf_train_cost = []
+    torch.autograd.set_detect_anomaly(True)
+    for i in range(network_train_iterations):
+        out, h_list = deep_nmf(*inputs)
+        #softmax = nn.Softmax(1)
+        #out = softmax(out)
+        # out = out / (torch.clamp(out.sum(axis=1)[:, None], min=1e-12) + EPSILON) # maybe you can insert into the net
+        # out = tensoring(np.where(out.sum(axis=1)[:, None] != 0, (out / out.sum(axis=1)[:, None]).detach().numpy(), 0))
+
+
+        # keep weights positive after gradient decent
+
+        #for w in deep_nmf.parameters():
+        #    w.data = w.clamp(min=0, max=inf)
+        deep_nmf_params = list(deep_nmf.parameters())
+
+        w_i = deep_nmf_params[1].T
+        #w_i = deep_nmf_params[len(deep_nmf_params) - 1].T
+        for j in range(len(h_list)):
+           w_i = new_w(h_list[j].T, w_i, v_train.T)
+        # dnmf_w = deep_nmf_params[len(deep_nmf_params)-1]
+        if w1_opt == '1':
+            dnmf_w = deep_nmf_params[1]
+        elif w1_opt == 'last':
+            dnmf_w = deep_nmf_params[len(deep_nmf_params) - 1].T
+        elif w1_opt == 'algo':
+            dnmf_w = nn.Softmax(1)(w_i.T)
+        else:
+            w_arrays = [nnls(out.data.numpy(), v_train.detach().numpy().T[f])[0] for f in range(features)]
+            nnls_w = np.stack(w_arrays, axis=-1)
+            dnmf_w = torch.from_numpy(nnls_w).float()
+
+        loss = cost_tns(v_train, dnmf_w, out, l_1, l_2)
+        criterion = nn.MSELoss(reduction="mean")
+        loss2 = torch.sqrt(criterion(out, dist_mix_i))
+
+        out34 = out / (torch.clamp(out.sum(axis=1)[:, None], min=1e-12))
+        loss34 = torch.sqrt(criterion(out34, dist_mix_i))
+
+        if verbose:
+            if i % 1000 == 0:
+                print(f"i = {i}, loss =  {loss.item()},  loss criterion = {loss2} loss34 is {loss34}")
+
+        optimizerADAM.zero_grad()
+        loss.backward()
+        optimizerADAM.step()
+        for w in deep_nmf.parameters():
+            w.data = w.clamp(min=0,max=inf)
+
+
+        # w_arrays = [nnls(out.data.numpy(), v_train.detach().numpy().T[f])[0] for f in range(features)]
+        #next_w =
+        #w_arrays = [new_w(h_list[h_index], dnmf_w[h_index], v_train.detach().numpy().T) for h_index in range(len(h_list))]
+        #nnls_w = np.stack(w_arrays, axis=-1)
+        #dnmf_w = torch.from_numpy(nnls_w).float()
+
+        dnmf_train_cost.append(loss.item())
+
+    return deep_nmf, dnmf_train_cost, dnmf_w, out
+
+
+def new_w(Hi, Wi, V):
+    denominator = torch.add(Wi.matmul(Hi).matmul(Hi.T), EPSILON)
+    numerator = V.matmul(Hi.T)
+    delta = torch.div(numerator, denominator)
+    return torch.mul(delta, Wi)
 
 
 def run_nmf_on_data_data(data_file, signature, output_path, deep_nmf, reformat_path=None, y_value=None):
@@ -155,8 +276,8 @@ def read_dataset_data(file_data):
     return data_file2
 
 
-def generate_dists(signature_data, std):
-    dist = np.asanyarray([np.random.dirichlet([1 for i in range(signature_data.shape[0])]) for i in range(100)],
+def generate_dists(signature_data, std, alpha=1):
+    dist = np.asanyarray([np.random.dirichlet([alpha for i in range(signature_data.shape[0])]) for i in range(100)],
                          dtype=float)
 
     t = dist.dot(signature_data)
