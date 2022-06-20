@@ -12,10 +12,14 @@ from colab.geditt import run_gedit_pre1
 from colab.utils_functions import train_unsupervised, tensoring, read_dataset_data
 from gedit_preprocess.MatrixTools import readMatrix, getSharedRows
 
-output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" \
-                "25.2_model/2-reformated/unsupervised_w0_l1cross"
-output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" \
-                "25.2_model/2-reformated/unsupervised_with_new_gedit"
+output_folder = (
+    "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/"
+    "25.2_model/2-reformated/unsupervised_w0_l1cross"
+)
+output_folder = (
+    "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/"
+    "25.2_model/2-reformated/unsupervised_with_new_gedit"
+)
 ref_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/ref_mat_2/"
 mixes_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/Nmf-Objects-3/"
 true_prop_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/TrueProportions/"
@@ -72,36 +76,41 @@ def main_train_on_generated_data(use_gedit=True, useW0=True, output_prefix=""):
                     continue
                 print("train")
                 if useW0:
-                    deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(tensoring(mix_data).T, num_layers, n_iter,
-                        n_components, ref_data=ref_data, l_1=l1, l_2=l2)
+                    deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(
+                        tensoring(mix_data).T, num_layers, n_iter, n_components, ref_data=ref_data, l_1=l1, l_2=l2
+                    )
                 else:
-                    deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(tensoring(mix_data).T, num_layers, n_iter,
-                        n_components, l_1=l1, l_2=l2)
+                    deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(
+                        tensoring(mix_data).T, num_layers, n_iter, n_components, l_1=l1, l_2=l2
+                    )
                 criterion = nn.MSELoss(reduction="mean")
 
-                dist_mix_i = torch.from_numpy(
-                    read_dataset(mix_true_prop_path)[1:, 1:].astype(float)).float()
+                dist_mix_i = torch.from_numpy(read_dataset(mix_true_prop_path)[1:, 1:].astype(float)).float()
 
                 loss = torch.sqrt(criterion(out_h, dist_mix_i))
                 output_path_w = f"{mix_signature_folder}/Wdnf$Unsupervised$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
                 if output_prefix != "":
-                    output_path_h = f"{mix_signature_folder}/OUT${output_prefix}$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
+                    output_path_h = (
+                        f"{mix_signature_folder}/OUT${output_prefix}$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
+                    )
 
-                output_path_loss = f"{mix_signature_folder}/Dnmf$UnsupervisedNoGedit$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
+                output_path_loss = (
+                    f"{mix_signature_folder}/Dnmf$UnsupervisedNoGedit$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
+                )
                 if output_prefix != "":
                     output_path_loss = f"{mix_signature_folder}/{output_prefix}$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
 
                 print(f"l1: {l1}, l2: {l2} loss = {loss}")
-                #writeMatrix(dnmf_w.detach().numpy(), output_path_w)
+                # writeMatrix(dnmf_w.detach().numpy(), output_path_w)
                 writeMatrix(out_h.detach().numpy(), output_path_h)
                 writeMatrix(np.array([[loss.tolist()]]), output_path_loss)
 
 
 def generate_yes_no(bool_var):
-    return 'Yes' if bool_var else 'No'
+    return "Yes" if bool_var else "No"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     option_gedit = [False, True]
     option_W0 = [False, True]
 
@@ -113,4 +122,3 @@ if __name__ == '__main__':
             output_string = f"Dnmf$Unupervised${generate_yes_no(gedit)}Gedit${generate_yes_no(w0)}Wo$"
             print(f"{generate_yes_no(gedit)}Gedit${generate_yes_no(w0)}")
             main_train_on_generated_data(use_gedit=gedit, useW0=w0, output_prefix=output_string)
-

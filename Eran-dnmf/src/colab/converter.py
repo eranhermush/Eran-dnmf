@@ -7,36 +7,35 @@ def ConvertNames(namesList):
 
 def Convert1Name(Name):
     name = Name.lower()
-    if "endothelial" in name \
-            or "endo" in name:
+    if "endothelial" in name or "endo" in name:
         return "Endothelial"
     if "neutrophil" in name:
         return "Neutrophils"
     if "macrophage" in name:
         return "Macrophages"
-    if "fibroblast" in name \
-            or "cafs" in name:
+    if "fibroblast" in name or "cafs" in name:
         return "Fibroblasts"
     if "cd4" in name:
         return "CD4 T Cells"
     if "cd8" in name:
         return "CD8 T Cells"
-    if "mono" in name \
-            or "cd14" in name:
+    if "mono" in name or "cd14" in name:
         return "Monocytes"
-    if "nk" in name \
-            or "natural" in name:
+    if "nk" in name or "natural" in name:
         return "NK Cells"
     if "mast" in name:
         return "Mast Cell"
-    if name == "b" or \
-            "cd19b" in name \
-            or "b cell" in name \
-            or "b_cell" in name \
-            or "b.cell" in name \
-            or "bcell" in name \
-            or "b lineage" in name \
-            or "b-cell" in name and "pro" not in name:
+    if (
+        name == "b"
+        or "cd19b" in name
+        or "b cell" in name
+        or "b_cell" in name
+        or "b.cell" in name
+        or "bcell" in name
+        or "b lineage" in name
+        or "b-cell" in name
+        and "pro" not in name
+    ):
         return "B Cells"
     if name in ["p-value", "correlation", "rmse", "absolute score (sig.score)"]:
         return "trash"

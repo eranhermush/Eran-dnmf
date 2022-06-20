@@ -7,8 +7,7 @@ from torch import optim, nn
 from benchmarking import read_dataset, writeMatrix
 from colab.converter import main_format
 from colab.geditt import run_gedit_pre1
-from colab.utils_functions import train_supervised_one_sample, read_dataset_data, \
-    tensoring, generate_dists
+from colab.utils_functions import train_supervised_one_sample, read_dataset_data, tensoring, generate_dists
 from gedit_preprocess.MatrixTools import readMatrix, getSharedRows
 from layers.super_net import SuperNet
 
@@ -18,7 +17,7 @@ true_prop_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolu
 
 
 def get_matrices(mix_path, ref_path, use_gedit, use_all_genes=False):
-    if use_gedit == 'new_gedit':
+    if use_gedit == "new_gedit":
         ref_object, mix_object = run_gedit_pre1(mix_path, ref_path, True)
     elif use_gedit == True:
         ref_object, mix_object = run_gedit_pre1(mix_path, ref_path, use_all_genes)
@@ -45,7 +44,9 @@ def update_ref_on_genes(mixes_folder, ref_path):
     return [first_row] + ref_object_matrix
 
 
-def main_train_on_generated_data(output_folder, use_gedit=True, useW0=True, output_prefix="", TestOnOTherMix=True, alpha=1):
+def main_train_on_generated_data(
+    output_folder, use_gedit=True, useW0=True, output_prefix="", TestOnOTherMix=True, alpha=1
+):
     if not os.path.isdir(output_folder):
         os.mkdir(output_folder)
     lr = 0.001
@@ -106,19 +107,42 @@ def main_train_on_generated_data(output_folder, use_gedit=True, useW0=True, outp
 
                 v_train_i = torch.from_numpy(train_data[train_index][0]).float()
                 dist_train_i = torch.from_numpy(train_data[train_index][1]).float()
-                loss_values = train_supervised_one_sample(v_train_i, dist_train_i, n_iter,
-                                                          deep_nmf, optimizerADAM, False)
+                loss_values = train_supervised_one_sample(
+                    v_train_i, dist_train_i, n_iter, deep_nmf, optimizerADAM, False
+                )
 
                 loss_arr.append(loss_values)
                 deep_nmf_arr.append(deep_nmf)
-            #print(f"avg loss is {sum(loss_arr) / len(loss_arr)}")
+            # print(f"avg loss is {sum(loss_arr) / len(loss_arr)}")
 
-            find_result_with_ensemble(deep_nmf_arr, output_folder, mix_name, ref_name, mixes_folder,
-                        true_prop_folder, ref_path, use_gedit, ref_object.tolist(), output_prefix, TestOnOTherMix)
+            find_result_with_ensemble(
+                deep_nmf_arr,
+                output_folder,
+                mix_name,
+                ref_name,
+                mixes_folder,
+                true_prop_folder,
+                ref_path,
+                use_gedit,
+                ref_object.tolist(),
+                output_prefix,
+                TestOnOTherMix,
+            )
 
 
-def find_result_with_ensemble(nmf_array, output_folder, deep_mix_name, ref_name, mixes_folder,
-                              true_prop_folder, ref_path, use_gedit, ref_object_formated, output_prefix, TestOnOTherMix=True):
+def find_result_with_ensemble(
+    nmf_array,
+    output_folder,
+    deep_mix_name,
+    ref_name,
+    mixes_folder,
+    true_prop_folder,
+    ref_path,
+    use_gedit,
+    ref_object_formated,
+    output_prefix,
+    TestOnOTherMix=True,
+):
     mixes_names = [h for h in os.listdir(mixes_folder)]
     if not TestOnOTherMix:
         mixes_names = [h for h in mixes_names if deep_mix_name in h]
@@ -162,22 +186,29 @@ def find_result_with_ensemble(nmf_array, output_folder, deep_mix_name, ref_name,
 
 
 def generate_yes_no(bool_var):
-    c = {True: 'Yes', False: "No", "new_gedit": "NewG"}
+    c = {True: "Yes", False: "No", "new_gedit": "NewG"}
     return c.get(bool_var, bool_var)
 
 
-if __name__ == '__main__':
-    output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" \
-                    "25.3/2_results_specials"
-    alpha=1
+if __name__ == "__main__":
+    output_folder = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" "25.3/2_results_specials"
+    )
+    alpha = 1
     option_gedit = [500, False, True]
     option_W0 = [False, True]
-    TestOnOTherMix=False
+    TestOnOTherMix = False
     for gedit in option_gedit:
         mix_signature_folder = f"{output_folder}/{gedit}"
 
         for w0 in option_W0:
             output_string = f"Dnmf$SupervisedGenerated{alpha}${generate_yes_no(gedit)}Gedit${generate_yes_no(w0)}Wo$"
             print(f"{generate_yes_no(gedit)}Gedit${generate_yes_no(w0)}")
-            main_train_on_generated_data(mix_signature_folder, use_gedit=gedit, useW0=w0, output_prefix=output_string,
-                                         TestOnOTherMix=TestOnOTherMix, alpha=alpha)
+            main_train_on_generated_data(
+                mix_signature_folder,
+                use_gedit=gedit,
+                useW0=w0,
+                output_prefix=output_string,
+                TestOnOTherMix=TestOnOTherMix,
+                alpha=alpha,
+            )

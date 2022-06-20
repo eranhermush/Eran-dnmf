@@ -8,8 +8,10 @@ from colab.geditt import gedit_main1
 from colab.utils_functions import generate_dists, run_nmf_on_data_data, train_supervised_one_sample
 from layers.super_net import SuperNet
 
-output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" \
-                "25.2_model/nmf_train_on_generated_data_W0"
+output_folder = (
+    "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/"
+    "25.2_model/nmf_train_on_generated_data_W0"
+)
 ref_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/ref_mat_2/"
 mixes_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/Nmf-Objects-2/"
 true_prop_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/TrueProportions/"
@@ -58,15 +60,21 @@ def main_train_on_generated_data():
             for train_index in range(len(train_data)):
                 v_train_i = torch.from_numpy(train_data[train_index][0]).float()
                 dist_train_i = torch.from_numpy(train_data[train_index][1]).float()
-                loss_values = train_supervised_one_sample(v_train_i, dist_train_i, n_iter,
-                                                          deep_nmf, optimizerADAM, False)
+                loss_values = train_supervised_one_sample(
+                    v_train_i, dist_train_i, n_iter, deep_nmf, optimizerADAM, False
+                )
                 if train_index % 24 == 0:
                     print(f"Start train index: {train_index} with loss: {loss_values[-1]}")
 
             output_path = f"{mix_signature_folder}/dnmf$train$GeneratedW0_{mix_name}_{ref_name}.tsv"
-            run_nmf_on_data_data(mix_data[1:, 1:].astype(float).T, np.asanyarray(ref_object),
-                                 output_path, deep_nmf, reformat_path=mix_true_prop_path)
+            run_nmf_on_data_data(
+                mix_data[1:, 1:].astype(float).T,
+                np.asanyarray(ref_object),
+                output_path,
+                deep_nmf,
+                reformat_path=mix_true_prop_path,
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main_train_on_generated_data()

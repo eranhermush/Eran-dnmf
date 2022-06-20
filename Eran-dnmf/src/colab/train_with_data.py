@@ -7,12 +7,17 @@ from torch import optim
 from benchmarking import read_dataset
 from colab.converter import main_format
 from colab.geditt import gedit_main1
-from colab.utils_functions import run_nmf_on_data_data, read_dataset_data, \
-    create_mix_train, train_supervised_one_sample_reformat
+from colab.utils_functions import (
+    run_nmf_on_data_data,
+    read_dataset_data,
+    create_mix_train,
+    train_supervised_one_sample_reformat,
+)
 from layers.super_net import SuperNet
 
-output_folder = \
+output_folder = (
     "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.2_model/nmf_train_on_real_data_W0"
+)
 ref_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/ref_mat_2/"
 mixes_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/Nmf-Objects-2/"
 true_prop_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/TrueProportions/"
@@ -89,10 +94,18 @@ def main_train_on_real_data():
                 data_formated[0] = "\tmix" + data_formated[0]
 
                 dist_train_i_formated = torch.from_numpy(
-                    read_dataset_data(data_formated)[1:, 1:].astype(float)).float()[:, :-1]
+                    read_dataset_data(data_formated)[1:, 1:].astype(float)
+                ).float()[:, :-1]
 
-                loss_values = train_supervised_one_sample_reformat(converted_mix_data.T, dist_train_i_formated,
-                    n_components, deep_nmf, optimizerADAM, False, print_every=200)
+                loss_values = train_supervised_one_sample_reformat(
+                    converted_mix_data.T,
+                    dist_train_i_formated,
+                    n_components,
+                    deep_nmf,
+                    optimizerADAM,
+                    False,
+                    print_every=200,
+                )
 
                 print(f"Start train index: {train_index} with loss: {loss_values[-1]}")
 
@@ -100,5 +113,5 @@ def main_train_on_real_data():
             run_nmf_on_data_data(mix_data[1:, 1:].astype(float).T, np.asanyarray(ref_object), output_path, deep_nmf)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main_train_on_real_data()

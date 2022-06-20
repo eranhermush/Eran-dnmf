@@ -75,9 +75,13 @@ def run_nmf_on_data(data_path, signature_path, output_path, deep_nmf):
     out = deep_nmf(H_init, data_torch)
     normalize_out = out / out.sum(axis=1)[:, None]
 
-    result = np.zeros((out.shape[0] + 1, out.shape[1]), dtype='U28')
-    result[0,] = signature[0][1:]
-    result[1:, ] = normalize_out.detach().numpy()
+    result = np.zeros((out.shape[0] + 1, out.shape[1]), dtype="U28")
+    result[0,] = signature[
+        0
+    ][1:]
+    result[
+        1:,
+    ] = normalize_out.detach().numpy()
     writeMatrix(result, output_path)
 
 

@@ -9,7 +9,7 @@ datasets_folder = "/content/drive/MyDrive/TAU/Roded/Mixes"
 dataref_folder = "/content/drive/MyDrive/TAU/Roded/refMat"
 output_folder = "/content/drive/MyDrive/TAU/Roded/Nmf-results"
 
-output_folder = '../resources/gedit/NMF-obj'
+output_folder = "../resources/gedit/NMF-obj"
 
 signames = [f for f in listdir(sig_folder_pkl)]
 

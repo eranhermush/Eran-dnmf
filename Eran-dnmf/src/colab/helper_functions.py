@@ -39,15 +39,21 @@ def update_best(src_folder, output_folder):
                 shutil.copyfile(f"{mix_path}/{best_path_name}", f"{mix_output_folder}/{best_path_name}")
 
 
-if __name__ == '__main__':
-    src_folder_gedit = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/" \
-                       "Figure1/Eran/25.2_model/3-compare-new"
-    output_folder_gedit = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/" \
-                          "Figure1/Eran/25.2_model/4-compare-new"
-    src_folder_other = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/" \
-                       "Figure1/Eran/25.2_model/3-compare-new-on-other"
-    output_folder_other = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/" \
-                          "Figure1/Eran/25.2_model/4-compare-new-on-other"
+if __name__ == "__main__":
+    src_folder_gedit = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/" "Figure1/Eran/25.2_model/3-compare-new"
+    )
+    output_folder_gedit = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/" "Figure1/Eran/25.2_model/4-compare-new"
+    )
+    src_folder_other = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/"
+        "Figure1/Eran/25.2_model/3-compare-new-on-other"
+    )
+    output_folder_other = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/"
+        "Figure1/Eran/25.2_model/4-compare-new-on-other"
+    )
 
     update_best(src_folder_gedit, output_folder_gedit)
     update_best(src_folder_other, output_folder_other)

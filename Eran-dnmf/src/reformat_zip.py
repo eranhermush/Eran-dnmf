@@ -63,7 +63,7 @@ def update_file_data(base_folder):
             cell_files = os.listdir(cell_folder)
             for file_name in cell_files:
                 data = read_dataset(f"{cell_folder}/{file_name}")
-                new_data = np.zeros((data.shape[0], data.shape[1] + 1), dtype='U28')
+                new_data = np.zeros((data.shape[0], data.shape[1] + 1), dtype="U28")
                 new_data[:, 1:] = data
                 new_data[:, 0] = [f"Mixture_{i}" for i in range(len(new_data[:, 0]))]
                 writeMatrix(new_data, f"{cell_folder}/{file_name}")
@@ -110,13 +110,13 @@ def get_file_data(file_path):
     with open(file_path) as f:
         csvv = csv.reader(f, delimiter="\t")
         value = list(csvv)[0][0]
-        if value == 'NA':
+        if value == "NA":
             return None
         return float(value)
 
 
 def get_all_bests(base_folder, output_folder, output_gedit=None):
-    #algos = {"kl": False, "rmse": False, "pearson": True}
+    # algos = {"kl": False, "rmse": False, "pearson": True}
     algos = {"rmse": False}
     signs = os.listdir(base_folder)
     for sign in signs:
@@ -152,7 +152,7 @@ def get_all_bests2(base_folder, output_folder, output_gedit=None):
                 get_best_file_in_folder(sign_folder, output_gedit_folder_sign, algo, algos[algo], is_gedit=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # base_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/" \
     #             "Eran/benchmarking_results/Nmf-results"
     # main(base_folder)
@@ -161,17 +161,26 @@ if __name__ == '__main__':
     # output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/" \
     #                 "Eran/benchmarking_results/Best3"
 
-    base_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/" \
-                  "Eran/results_colab/results-elasticNet/res"
-    output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/" \
-                    "Eran/results_colab/results-elasticNet/best_values"
-    output_folder_gedit = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/" \
-                    "Eran/results_colab/results-elasticNet/best_values_gedit"
+    base_folder = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/"
+        "Eran/results_colab/results-elasticNet/res"
+    )
+    output_folder = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/"
+        "Eran/results_colab/results-elasticNet/best_values"
+    )
+    output_folder_gedit = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/"
+        "Eran/results_colab/results-elasticNet/best_values_gedit"
+    )
 
-    base_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.2_model/output_folder-3/"
-    output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.2_model/3-compare/"
+    base_folder = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.2_model/output_folder-3/"
+    )
+    output_folder = (
+        "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.2_model/3-compare/"
+    )
     get_all_bests(base_folder, output_folder)
 
-
-    #get_all_bests2(base_folder, output_folder, output_folder_gedit)
+    # get_all_bests2(base_folder, output_folder, output_folder_gedit)
     # get_best_file_in_folder(base_folder, output_folder, "rmse")

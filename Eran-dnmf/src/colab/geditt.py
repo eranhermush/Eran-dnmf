@@ -3,7 +3,7 @@ from gedit_preprocess.MatrixTools import RescaleRows, getSharedRows, remove0s, q
 from gedit_preprocess.getSigGenesModal import returnSigMatrix
 
 
-def run_gedit_pre1(rawMix, rawRef, use_all_genes=False, NumSigs=None):
+def run_gedit_pre1(rawMix, rawRef, use_all_genes=False, NumSigs=None, use_data=False):
     """
     usage default:
     python ThisScript.py -mix SamplesMat.tsv -ref RefMat.tsv
@@ -13,9 +13,12 @@ def run_gedit_pre1(rawMix, rawRef, use_all_genes=False, NumSigs=None):
     """
     # where to write results
     curDir = "./"  # ""/".join(os.path.realpath(__file__).split("/")[0:-1]) + "/"
-    #scratchSpace = curDir + "scratch/"
+    # scratchSpace = curDir + "scratch/"
 
-    args_input = ["-mix", rawMix, "-ref", rawRef]
+    if use_data:
+        args_input = ["-mixData", rawMix, "-refData", rawRef]
+    else:
+        args_input = ["-mix", rawMix, "-ref", rawRef]
     if NumSigs is not None:
         args_input.extend(["-NumSigs", NumSigs])
     myArgs = checkInputs(args_input)
@@ -33,17 +36,17 @@ def run_gedit_pre1(rawMix, rawRef, use_all_genes=False, NumSigs=None):
     numCTs = len(rawRef[0]) - 1
     TotalSigs = int(SigsPerCT * numCTs)
 
-    stringParams = [str(m) for m in \
-                    [MixFName, RefFName, SigsPerCT, SigMethod, RowScaling]]
-    #refFile = scratchSpace + "signatures/" + "_".join(stringParams) + "_" + "ScaledRef.tsv"
-    #mixFile = scratchSpace + "datasets/" + "_".join(stringParams) + "_" + "ScaledMix.tsv"
-    #if os.path.exists(refFile) or os.path.exists(mixFile):
+    stringParams = [str(m) for m in [MixFName, RefFName, SigsPerCT, SigMethod, RowScaling]]
+    # refFile = scratchSpace + "signatures/" + "_".join(stringParams) + "_" + "ScaledRef.tsv"
+    # mixFile = scratchSpace + "datasets/" + "_".join(stringParams) + "_" + "ScaledMix.tsv"
+    # if os.path.exists(refFile) or os.path.exists(mixFile):
     #    return
 
     SampleNames = rawMix[0]
     CTNames = rawRef[0]
 
     betRef = remove0s(rawRef)
+    # betRef = rawRef[rawRef.abs().sum(dim=1).bool(), :]
 
     normMix, normRef = qNormMatrices(rawMix, betRef)
     sharedMix, sharedRef = getSharedRows(normMix, betRef)
@@ -59,8 +62,7 @@ def run_gedit_pre1(rawMix, rawRef, use_all_genes=False, NumSigs=None):
     # MatrixTools.writeMatrix([SampleNames] + normMix, scratchSpace + "NormMix.tsv")
 
     if not use_all_genes:
-        SigRef = returnSigMatrix([CTNames] + sharedRef, \
-                                              SigsPerCT, TotalSigs, SigMethod)
+        SigRef = returnSigMatrix([CTNames] + sharedRef, SigsPerCT, TotalSigs, SigMethod)
     else:
         SigRef = sharedRef
 
@@ -80,8 +82,8 @@ def run_gedit_pre1(rawMix, rawRef, use_all_genes=False, NumSigs=None):
 
     # scratchSpace = scratchSpace + "_".join(stringParams) + "_"
 
-    #MatrixTools.writeMatrix(ScaledRef, refFile)
-    #MatrixTools.writeMatrix(ScaledMix, mixFile)
+    # MatrixTools.writeMatrix(ScaledRef, refFile)
+    # MatrixTools.writeMatrix(ScaledMix, mixFile)
     return ScaledRef, ScaledMix
     # strDescr = "_".join(stringParams)
     # Rscript = "GLM_Decon.R"
@@ -94,7 +96,7 @@ def run_gedit_pre1(rawMix, rawRef, use_all_genes=False, NumSigs=None):
 
     # for line in predictions:
     #  print "\t".join([str(el) for el in line])
-    #return
+    # return
 
 
 def readInPredictions1(fname):
@@ -117,11 +119,11 @@ def gedit_main1(ref_file, mix_file, signature_name=None):
     REF_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/RefMats/"
     MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/Mixes/"
 
-    #ref_files = [f"{ref_folder}/{f}" for f in listdir(ref_folder) if isfile(join(ref_folder, f))]
-    #if signature_name:
+    # ref_files = [f"{ref_folder}/{f}" for f in listdir(ref_folder) if isfile(join(ref_folder, f))]
+    # if signature_name:
     #    ref_files = [f for f in ref_files if signature_name in f]
-    #mix_files = [f"{mix_folder}/{f}" for f in listdir(mix_folder) if isfile(join(mix_folder, f))]
+    # mix_files = [f"{mix_folder}/{f}" for f in listdir(mix_folder) if isfile(join(mix_folder, f))]
 
-    #print("Working in ref=" + ref, " mix = " + mix)
+    # print("Working in ref=" + ref, " mix = " + mix)
     ScaledRef, ScaledMix = run_gedit_pre1(mix_file, ref_file)
-    return  ScaledRef, ScaledMix
+    return ScaledRef, ScaledMix

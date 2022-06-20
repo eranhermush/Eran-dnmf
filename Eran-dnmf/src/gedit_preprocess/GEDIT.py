@@ -15,7 +15,7 @@ def run_gedit_pre(rawMix, rawRef, scratchSpace, use_all_genes=False, NumSigs=Non
     """
     # where to write results
     curDir = "./"  # ""/".join(os.path.realpath(__file__).split("/")[0:-1]) + "/"
-    #scratchSpace = curDir + "scratch/"
+    # scratchSpace = curDir + "scratch/"
 
     args_input = ["-mix", rawMix, "-ref", rawRef]
     if NumSigs is not None:
@@ -35,8 +35,7 @@ def run_gedit_pre(rawMix, rawRef, scratchSpace, use_all_genes=False, NumSigs=Non
     numCTs = len(rawRef[0]) - 1
     TotalSigs = int(SigsPerCT * numCTs)
 
-    stringParams = [str(m) for m in \
-                    [MixFName, RefFName, SigsPerCT, SigMethod, RowScaling]]
+    stringParams = [str(m) for m in [MixFName, RefFName, SigsPerCT, SigMethod, RowScaling]]
     refFile = scratchSpace + "signatures/" + "_".join(stringParams) + "_" + "ScaledRef.tsv"
     mixFile = scratchSpace + "datasets/" + "_".join(stringParams) + "_" + "ScaledMix.tsv"
     if os.path.exists(refFile) or os.path.exists(mixFile):
@@ -61,8 +60,7 @@ def run_gedit_pre(rawMix, rawRef, scratchSpace, use_all_genes=False, NumSigs=Non
     # MatrixTools.writeMatrix([SampleNames] + normMix, scratchSpace + "NormMix.tsv")
 
     if not use_all_genes:
-        SigRef = getSigGenesModal.returnSigMatrix([CTNames] + sharedRef, \
-                                              SigsPerCT, TotalSigs, SigMethod)
+        SigRef = getSigGenesModal.returnSigMatrix([CTNames] + sharedRef, SigsPerCT, TotalSigs, SigMethod)
     else:
         SigRef = sharedRef
 
@@ -126,9 +124,9 @@ def gedit_main(ref_folder, mix_folder, output_folder, use_all_genes=False, signa
             run_gedit_pre(mix, ref, output_folder, use_all_genes, NumSigs)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     REF_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/ref_mat_2/"
     MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/Nmf-Objects-2"
     output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/gedit_data/Yes/"
-    #NumSigs = 500
-    gedit_main(REF_FOLDER, MIX_FOLDER, output)#, NumSigs=str(NumSigs))
+    # NumSigs = 500
+    gedit_main(REF_FOLDER, MIX_FOLDER, output)  # , NumSigs=str(NumSigs))

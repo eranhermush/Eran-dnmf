@@ -11,11 +11,13 @@ from gedit_preprocess.MatrixTools import readMatrix
 
 mixes_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/r_results/500"
 true_prop_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/TrueProportions"
-output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/2_results_withR_new/500"
+output_folder = (
+    "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/2_results_withR_new/500"
+)
 
 
 def format_and_rmse(mix_path, mix_true_prop_path, output_prefix, output_dir):
-    mix_name, ref_name, _ = mix_path.split('/')[-1].split('_', 2)
+    mix_name, ref_name, _ = mix_path.split("/")[-1].split("_", 2)
 
     mix_object = readMatrix(mix_path)
     mix_object_formated = main_format(mix_object, mix_true_prop_path)
@@ -40,15 +42,15 @@ def main(algo_mix_folder, out_folder, true_prop_folder):
         mix_folder = f"{algo_mix_folder}/{algo}"
         mixes_names = [h for h in os.listdir(mix_folder)]
         for mix_name in mixes_names:
-            short_mix_name = mix_name.split('_', 2)[0]
+            short_mix_name = mix_name.split("_", 2)[0]
             mix_true_prop_path = f"{true_prop_folder}/TrueProps{short_mix_name}"
-            if not mix_true_prop_path.endswith('.tsv'):
-                mix_true_prop_path = mix_true_prop_path + '.tsv'
+            if not mix_true_prop_path.endswith(".tsv"):
+                mix_true_prop_path = mix_true_prop_path + ".tsv"
             mix_path = f"{mix_folder}/{mix_name}"
             output_prefix = str(algo)
             output_dir = f"{out_folder}/{short_mix_name}"
             format_and_rmse(mix_path, mix_true_prop_path, output_prefix, output_dir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(mixes_folder, output_folder, true_prop_folder)

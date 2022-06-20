@@ -15,9 +15,7 @@ class UnsuperNet(nn.Module):
     def __init__(self, n_layers, comp, features, l_1=0, l_2=0):
         super(UnsuperNet, self).__init__()
         self.n_layers = n_layers
-        self.deep_nmfs = nn.ModuleList(
-            [UnsuperLayer(comp, features, l_1, l_2) for i in range(self.n_layers)]
-        )
+        self.deep_nmfs = nn.ModuleList([UnsuperLayer(comp, features, l_1, l_2) for i in range(self.n_layers)])
 
     def forward(self, h, x):
         # sequencing the layers and forward pass through the network

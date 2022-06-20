@@ -10,8 +10,10 @@ from colab.geditt import run_gedit_pre1
 from colab.utils_functions import train_unsupervised, tensoring, read_dataset_data
 from gedit_preprocess.MatrixTools import getSharedRows, readMatrix
 
-output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" \
-                "25.2_model/2-reformated/unsupervised_W0_no_gedit"
+output_folder = (
+    "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/"
+    "25.2_model/2-reformated/unsupervised_W0_no_gedit"
+)
 ref_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/ref_mat_2/"
 mixes_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/Nmf-Objects-2/"
 true_prop_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/TrueProportions/"
@@ -55,12 +57,12 @@ def main_train_on_generated_data(use_gedit=True):
             features, n_components = ref_data.shape
             mix_data = np.asanyarray(mix_object)[1:, 1:].astype(float)
 
-            deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(tensoring(mix_data).T, num_layers, n_iter,
-                                                                   n_components, ref_data=ref_data)
+            deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(
+                tensoring(mix_data).T, num_layers, n_iter, n_components, ref_data=ref_data
+            )
             criterion = nn.MSELoss(reduction="mean")
 
-            dist_mix_i = torch.from_numpy(
-                read_dataset(mix_true_prop_path)[1:, 1:].astype(float)).float()
+            dist_mix_i = torch.from_numpy(read_dataset(mix_true_prop_path)[1:, 1:].astype(float)).float()
 
             loss = torch.sqrt(criterion(out_h, dist_mix_i))
             output_path_w = f"{mix_signature_folder}/Wdnf$Unsupervised_{mix_name}_{ref_name}.tsv"
@@ -73,5 +75,5 @@ def main_train_on_generated_data(use_gedit=True):
             writeMatrix(np.array([[loss.tolist()]]), output_path_loss)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main_train_on_generated_data(False)

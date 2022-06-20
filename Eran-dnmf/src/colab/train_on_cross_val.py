@@ -11,8 +11,9 @@ from colab.geditt import gedit_main1
 from colab.utils_functions import generate_dists, run_nmf_on_data_data, train_supervised_one_sample, read_dataset_data
 from layers.super_net import SuperNet
 
-output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" \
-                "25.2_model/2-reformated/cross_val"
+output_folder = (
+    "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" "25.2_model/2-reformated/cross_val"
+)
 ref_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/ref_mat_2/"
 mixes_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/Nmf-Objects-2/"
 true_prop_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/TrueProportions/"
@@ -47,14 +48,15 @@ def main_train_on_generated_data(use_gedit=True):
             ref_object = read_dataset_data(ref_object_formated)[:, :-1]
             ref_data = ref_object[1:, 1:].astype(float)
 
-
             mix_data = np.asanyarray(mix_object)
             Y = read_dataset(mix_true_prop_path)
             kf = KFold(n_splits=10)
             loss_arr = []
             for train_index, test_index in kf.split(mix_data[1:, 1:].T):
-                X_train, X_test = mix_data[1:, 1:].astype(float).T[train_index], mix_data[1:, 1:].astype(float).T[
-                    test_index]
+                X_train, X_test = (
+                    mix_data[1:, 1:].astype(float).T[train_index],
+                    mix_data[1:, 1:].astype(float).T[test_index],
+                )
                 y_train, y_test = Y[1:, 1:].astype(float)[train_index], Y[1:, 1:].astype(float)[test_index]
 
                 features, n_components = ref_data.shape
@@ -70,17 +72,27 @@ def main_train_on_generated_data(use_gedit=True):
                         w.data.fill_(1.0)
                 optimizerADAM = optim.Adam(deep_nmf.parameters(), lr=lr)
 
-
-                loss_values = train_supervised_one_sample(torch.from_numpy(X_train).float(),
-                                torch.from_numpy(y_train).float(), n_iter, deep_nmf, optimizerADAM, False)
-
+                loss_values = train_supervised_one_sample(
+                    torch.from_numpy(X_train).float(),
+                    torch.from_numpy(y_train).float(),
+                    n_iter,
+                    deep_nmf,
+                    optimizerADAM,
+                    False,
+                )
 
                 output_path = f"{mix_signature_folder}/dnmf_cross$train$GeneratedW0_{mix_name}_{ref_name}.tsv"
-                loss = run_nmf_on_data_data(np.asanyarray(X_test), np.asanyarray(ref_object),
-                    output_path, deep_nmf, reformat_path=mix_true_prop_path, y_value=torch.from_numpy(y_test).float())
+                loss = run_nmf_on_data_data(
+                    np.asanyarray(X_test),
+                    np.asanyarray(ref_object),
+                    output_path,
+                    deep_nmf,
+                    reformat_path=mix_true_prop_path,
+                    y_value=torch.from_numpy(y_test).float(),
+                )
                 loss_arr.append(loss)
             print(f"avg loss is {sum(loss_arr) / len(loss_arr)}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main_train_on_generated_data()

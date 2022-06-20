@@ -9,8 +9,9 @@ SIG_LM_PATH = "/Users/Eran/Documents/generate_predictions/LM22.npy"
 
 def generate_dists(file_index, signature_data, dist_folder, bulk_folder, std):
     # sig = np.load(sig_pickle)
-    dist = np.asanyarray([np.random.dirichlet([1 for i in range(signature_data.shape[0])]) for i in range(100)],
-                         dtype=np.float)
+    dist = np.asanyarray(
+        [np.random.dirichlet([1 for i in range(signature_data.shape[0])]) for i in range(100)], dtype=np.float
+    )
 
     t = dist.dot(signature_data)
     t += np.random.normal(0, std, t.shape)
@@ -102,8 +103,7 @@ def generate_resources_main(ref_dir, output_folder, signature_name=None):
         generate_resoucres(signature_data, signature, output_folder)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     # from_mix_input_to_signature_input("LM22.txt","CellMixtures.tsv", "CeelMix_lm22T")
     # main()
 
@@ -113,5 +113,7 @@ if __name__ == '__main__':
 
     # generate_signatures("/Users/Eran/Documents/generate_predictions/ref_gedit/gedit_signatures_nmf/",
     #                    "/Users/Eran/Documents/generate_predictions/RefNp/")
-    generate_signatures("/Users/Eran/Documents/generate_predictions/ref_gedit/gedit_signatures_nmf/",
-                        "/Users/Eran/Documents/generate_predictions/RefNp/")
+    generate_signatures(
+        "/Users/Eran/Documents/generate_predictions/ref_gedit/gedit_signatures_nmf/",
+        "/Users/Eran/Documents/generate_predictions/RefNp/",
+    )

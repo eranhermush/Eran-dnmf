@@ -10,11 +10,15 @@ from colab.utils_functions import generate_dists, run_nmf_on_data_data, train_su
 from gedit_preprocess.MatrixTools import RescaleRows, Rescale_ZeroToOne
 from layers.super_net import SuperNet
 
-output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" \
-                "25.2_model/nmf_train_on_generated_data_W0"
+output_folder = (
+    "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/"
+    "25.2_model/nmf_train_on_generated_data_W0"
+)
 
-output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" \
-                "25.2_model/2-reformated/tmp-eran/new_new3_mp"
+output_folder = (
+    "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/"
+    "25.2_model/2-reformated/tmp-eran/new_new3_mp"
+)
 ref_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/ref_mat_2/"
 mixes_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/Nmf-Objects-2/"
 true_prop_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/TrueProportions/"
@@ -25,7 +29,7 @@ def RescaleRowsOneMatrix(Ref, power):
     Scaled = Rescale_ZeroToOne(Combined, power)
     ScaledRef = []
     for m in range(len(Combined)):
-        ScaledRef.append(Scaled[m][:len(Ref[0])])
+        ScaledRef.append(Scaled[m][: len(Ref[0])])
     return ScaledRef
 
 
@@ -51,7 +55,7 @@ def main_train_on_generated_data():
                 os.mkdir(mix_signature_folder)
             mix_path = f"{mixes_folder}/{mix_name}"
 
-            #ref_object, mix_object = gedit_main1(ref_path, mix_path)
+            # ref_object, mix_object = gedit_main1(ref_path, mix_path)
             ref_object, mix_object = run_gedit_pre1(mix_path, ref_path)
 
             ref_data = np.asanyarray(ref_object)[1:, 1:].astype(float)
@@ -75,7 +79,7 @@ def main_train_on_generated_data():
                 v_train_i = torch.from_numpy(train_data[train_index][0]).float()
 
                 v_train_i = v_train_i.T
-                resultV = np.zeros((v_train_i.shape[0] + 1, v_train_i.shape[1] + 1), dtype='U28')
+                resultV = np.zeros((v_train_i.shape[0] + 1, v_train_i.shape[1] + 1), dtype="U28")
                 resultV[0, 1:] = mix_object[0][1:]
                 resultV[1:, 1:] = v_train_i.detach().numpy()
 
@@ -84,21 +88,27 @@ def main_train_on_generated_data():
                 dist_train_i = torch.from_numpy(train_data[train_index][1]).float()
 
                 _, Scaledv_train_i = run_gedit_pre1(tmp_file, ref_path, True)
-                #_, Scaledv_train_i = run_gedit_pre1(v_train_i.detach().numpy().T.tolist(), ref_path, True)
+                # _, Scaledv_train_i = run_gedit_pre1(v_train_i.detach().numpy().T.tolist(), ref_path, True)
                 # _, Scaledv_train_i = RescaleRows(SigMix,
                 #                 v_train_i.detach().numpy().T.tolist(), 0.0, False)
                 Scaledv_train_i = np.asanyarray(Scaledv_train_i).T[1:, 1:]
                 Scaledv_train_i = torch.from_numpy(Scaledv_train_i.astype(float)).float()
 
-                loss_values = train_supervised_one_sample(Scaledv_train_i, dist_train_i, n_iter,
-                                                          deep_nmf, optimizerADAM, False)
+                loss_values = train_supervised_one_sample(
+                    Scaledv_train_i, dist_train_i, n_iter, deep_nmf, optimizerADAM, False
+                )
                 if train_index % 24 == 0:
                     print(f"Start train index: {train_index} with loss: {loss_values[-1]}")
 
             output_path = f"{mix_signature_folder}/dnmf$train$GeneratedW0_{mix_name}_{ref_name}.tsv"
-            run_nmf_on_data_data(mix_data[1:, 1:].astype(float).T, np.asanyarray(ref_object),
-                                 output_path, deep_nmf, reformat_path=mix_true_prop_path)
+            run_nmf_on_data_data(
+                mix_data[1:, 1:].astype(float).T,
+                np.asanyarray(ref_object),
+                output_path,
+                deep_nmf,
+                reformat_path=mix_true_prop_path,
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main_train_on_generated_data()

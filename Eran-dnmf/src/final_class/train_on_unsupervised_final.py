@@ -41,13 +41,15 @@ def main_train_on_generated_data(output_folder, use_gedit=True, useW0=True, outp
             if output_prefix != "":
                 output_path_h = f"{mix_signature_folder}/OUT${output_prefix}$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
 
-            output_path_loss = f"{mix_signature_folder}/Dnmf$UnsupervisedNoGedit$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
+            output_path_loss = (
+                f"{mix_signature_folder}/Dnmf$UnsupervisedNoGedit$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
+            )
             if output_prefix != "":
                 output_path_loss = f"{mix_signature_folder}/{output_prefix}$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
 
             if os.path.exists(output_path_h):
-               print("continue")
-               continue
+                print("continue")
+                continue
             print("train")
 
             if not os.path.isdir(mix_signature_folder):
@@ -77,22 +79,20 @@ def main_train_on_generated_data(output_folder, use_gedit=True, useW0=True, outp
             features, n_components = ref_data.shape
             mix_data = np.asanyarray(mix_object)[1:, 1:].astype(float)
 
-
             if useW0:
-                deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(tensoring(mix_data).T, num_layers, n_iter,
-                                                                              n_components, ref_data=ref_data, l_1=l1,
-                                                                              l_2=l2)
+                deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(
+                    tensoring(mix_data).T, num_layers, n_iter, n_components, ref_data=ref_data, l_1=l1, l_2=l2
+                )
             else:
-                deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(tensoring(mix_data).T, num_layers, n_iter,
-                                                                              n_components, l_1=l1, l_2=l2)
+                deep_nmf, dnmf_train_cost, dnmf_w, out_h = train_unsupervised(
+                    tensoring(mix_data).T, num_layers, n_iter, n_components, l_1=l1, l_2=l2
+                )
             criterion = nn.MSELoss(reduction="mean")
 
-            dist_mix_i = torch.from_numpy(
-                read_dataset(mix_true_prop_path)[1:, 1:].astype(float)).float()
+            dist_mix_i = torch.from_numpy(read_dataset(mix_true_prop_path)[1:, 1:].astype(float)).float()
 
             loss = torch.sqrt(criterion(out_h, dist_mix_i))
             output_path_w = f"{mix_signature_folder}/Wdnf$Unsupervised$L1{l1}$L2{l2}_{mix_name}_{ref_name}.tsv"
-
 
             print(f"l1: {l1}, l2: {l2} loss = {loss}")
             # writeMatrix(dnmf_w.detach().numpy(), output_path_w)
@@ -101,13 +101,12 @@ def main_train_on_generated_data(output_folder, use_gedit=True, useW0=True, outp
 
 
 def generate_yes_no(bool_var):
-    c = {True: 'Yes', False: "No", "new_gedit": "NewG"}
+    c = {True: "Yes", False: "No", "new_gedit": "NewG"}
     return c.get(bool_var, bool_var)
 
 
-if __name__ == '__main__':
-    output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" \
-                    "25.3/2_results"
+if __name__ == "__main__":
+    output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/" "25.3/2_results"
     option_gedit = [False, True, 500]
     option_W0 = [True, False]
 
