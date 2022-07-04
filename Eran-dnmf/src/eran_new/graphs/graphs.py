@@ -26,7 +26,9 @@ def _get_algo_frame(algo_path: Path, true_prop: DataFrame, use_true_prop: bool) 
     return algo_frame
 
 
-def get_folder_graphs(path: Path, use_true_prop: bool, algo_name: str, graph_size: int = GRAPH_SIZE) -> List[str]:
+def get_folder_graphs(
+    path: Path, use_true_prop: bool, algo_name: str, graph_size: int = GRAPH_SIZE, save_normalize_graph: bool = False
+) -> List[str]:
     dataset = path.name
     true_prop = TRUE_PATH_BASE / f"TrueProps{dataset}"  # {dataset.split('_')[0]}NormMix.tsv"
     true_prop_pandas = pd.read_csv(true_prop, sep="\t", index_col=0)
@@ -35,8 +37,8 @@ def get_folder_graphs(path: Path, use_true_prop: bool, algo_name: str, graph_siz
     loss_arr = []
     names_arr = []
     result_dict = {}
-    for algorithm in os.listdir(path):
-        algorithm = str(algorithm)
+    for algorithm_name in os.listdir(path):
+        algorithm = str(algorithm_name)
         algo_pandas = _get_algo_frame(path / algorithm, true_prop_pandas, use_true_prop)
         algo_pandas = format_dataframe(algo_pandas, true_prop_pandas)
         algo_tensor = _tensoring(algo_pandas.values)
@@ -67,6 +69,13 @@ def get_folder_graphs(path: Path, use_true_prop: bool, algo_name: str, graph_siz
         )
         names_arr.append(algorithm)
         result_dict[algorithm] = float(loss)
+        if save_normalize_graph:
+            directory = path.parent.parent / "normalized_graphs" / path.name
+            directory.mkdir(exist_ok=True, parents=True)
+            normalize_graph_path = directory / str(algorithm_name)
+            algo_pandas[:] = algo_pandas_normalized.tolist()
+            algo_pandas.to_csv(normalize_graph_path, sep="\t")
+
     sorted_lists = sorted(result_dict.items(), key=lambda x: x[1])[:graph_size]
     return sorted_lists
 
@@ -91,8 +100,10 @@ def create_graph(loss_arr: List[float], names_arr: List[str], name: str, descrip
     plt.show()
 
 
-def main_graph(path: Path, algo_name: str, description: str = "", use_true_prop: bool = False) -> None:
-    sorted_lists = get_folder_graphs(path, use_true_prop, algo_name)
+def main_graph(
+    path: Path, algo_name: str, description: str = "", use_true_prop: bool = False, save_normalize_graph: bool = False
+) -> None:
+    sorted_lists = get_folder_graphs(path, use_true_prop, algo_name, GRAPH_SIZE, save_normalize_graph)
     names_arr = [t[0] for t in sorted_lists]
     loss_arr = [t[1] for t in sorted_lists]
     create_graph(loss_arr, names_arr, path.name, description)
