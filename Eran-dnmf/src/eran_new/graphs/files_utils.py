@@ -7,60 +7,6 @@ from eran_new.graphs.graph_algorithm import GraphAlgorithm
 from eran_new.graphs.graphs import get_folder_graphs, create_graph, main_graph
 
 
-overfir_params = GraphAlgorithm(
-    path=Path("C:\\Users\\Eran\\\Downloads\\new_results\\new_results"),
-    use_signature=True,
-    glob_signature="*).tsv",
-    algorithm_description="Dnmf overfit",
-    use_true_prop=False,
-    name="dnmf overfit",
-    save_normalize_graph=True,
-)
-
-no_overfir_params = GraphAlgorithm(
-    path=Path("C:\\Users\\Eran\\\Downloads\\2_unsupervised_6.4\\2_unsupervised_6.4\\True"),
-    use_signature=False,
-    glob_signature="OUT*.tsv",
-    algorithm_description="Dnmf no overfit",
-    use_true_prop=True,
-    name="dnmf no overfit",
-    save_normalize_graph=True,
-)
-nnls_params = GraphAlgorithm(
-    path=Path(
-        "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\nnls_cibersort_new\\nnls"
-    ),
-    use_signature=False,
-    glob_signature="*.tsv",
-    algorithm_description="nnls with Gedit",
-    use_true_prop=False,
-    name="nnls",
-    save_normalize_graph=True,
-)
-cibersort_params = GraphAlgorithm(
-    path=Path(
-        "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\nnls_cibersort_new\\cibersort"
-    ),
-    use_signature=False,
-    glob_signature="*.tsv",
-    algorithm_description="Cibersort with Gedit",
-    use_true_prop=False,
-    name="cibersort",
-    save_normalize_graph=True,
-)
-gedit_params = GraphAlgorithm(
-    path=Path(
-        "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\nnls_cibersort_new\\gedit"
-    ),
-    use_signature=False,
-    glob_signature="*.tsv",
-    algorithm_description="Gedit algorithm",
-    use_true_prop=False,
-    name="gedit algorithm",
-    save_normalize_graph=True,
-)
-
-
 def move_pbm_to_folder(pbmc_path: Path, use_signature: bool = False, glob_signature: str = "*.tsv") -> Path:
     final_dir = pbmc_path / "final_results"
     final_dir.mkdir(parents=True, exist_ok=True)
@@ -105,7 +51,7 @@ def create_best_graph(algorithms: List[GraphAlgorithm], algo_size: int = 3) -> N
             )
         sorted_lists = sorted(loss_list, key=lambda x: x[1])
         names_arr = [t[0] for t in sorted_lists]
-        loss_arr = [t[1] for t in sorted_lists]
+        loss_arr = [float(t[1]) for t in sorted_lists]
         create_graph(loss_arr, names_arr, pbm_folder.name, "Best results - all algorithms")
 
 
