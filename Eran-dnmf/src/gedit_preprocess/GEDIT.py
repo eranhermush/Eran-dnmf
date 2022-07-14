@@ -125,8 +125,10 @@ def gedit_main(ref_folder, mix_folder, output_folder, use_all_genes=False, signa
 
 
 if __name__ == "__main__":
-    REF_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/ref_mat_2/"
-    MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/Nmf-Objects-2"
-    output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/gedit_data/Yes/"
+    REF_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/RefMats/"
+    # MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/Nmf-Objects-2"
+    MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/newData-quan/"
+    # output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/gedit_data/Yes/"
+    output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/gedit-quan/"
     # NumSigs = 500
-    gedit_main(REF_FOLDER, MIX_FOLDER, output)  # , NumSigs=str(NumSigs))
+    gedit_main(REF_FOLDER, MIX_FOLDER, output)  # , NumSigs=str(NumSigs))pbmc2

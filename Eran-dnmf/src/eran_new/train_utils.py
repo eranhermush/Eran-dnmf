@@ -33,10 +33,10 @@ def _init_dnmf(ref_mat: DataFrame, mix_max: DataFrame, config: DnmfConfig) -> Tu
             w = deep_nmf_params[w_index]
             if w_index == 0:
                 w.data = _tensoring(np.dot(ref_mat.T, ref_mat))
-                w.requires_grad = False
+                # w.requires_grad = False
             elif w_index == 1:
                 w.data = _tensoring(ref_mat.values.T)
-                w.requires_grad = False
+                # w.requires_grad = False
 
         h_0_train = [nnls(ref_mat.values, mix_max.values[kk])[0] for kk in range(len(mix_max))]
         h_0_train = _tensoring(np.asanyarray([d / sum(d) for d in h_0_train]))

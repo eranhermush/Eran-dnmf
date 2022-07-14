@@ -3,7 +3,7 @@ import os
 import pickle
 from collections import OrderedDict
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, List
 
 import numpy as np
 import pandas as pd
@@ -11,6 +11,7 @@ import torch
 from pandas import DataFrame
 from scipy.optimize import nnls
 from torch import nn, tensor, optim
+from torch.nn.parameter import Parameter
 from torch.optim import Optimizer
 
 from eran_new.data_formatter import format_dataframe
@@ -31,6 +32,7 @@ def train_manager(config: DnmfConfig, config_range: DnmfRange):
     mix_panda.index = mix_panda.index.str.upper()
 
     dist_panda = pd.read_csv(config.dist_path, sep="\t", index_col=0)
+    dist_panda.index = mix_panda.columns
     dist_panda.index = dist_panda.index.str.upper()
 
     ref_panda, mix_panda = _preprocess_dataframes(ref_panda, mix_panda, dist_panda, config)
@@ -43,7 +45,9 @@ def _handle_final_matrix(
     dist_new = dist_panda.copy()
     criterion = nn.MSELoss(reduction="mean")
     loss = torch.sqrt(criterion(out, _tensoring(dist_panda.values).to(config.device)))
-    checkpoint = {"loss": loss, "deep_nmf": deep_nmf, "config": config}
+    loss34 = torch.sqrt(criterion(out34, _tensoring(dist_panda.values).to(config.device)))
+    checkpoint = {"loss": loss, "loss34": loss34, "deep_nmf": deep_nmf, "config": config}
+    print(f"final results: loss: {loss}, loss34: {loss34}")
     with open(str(config.output_path) + ".pkl", "wb") as f:
         pickle.dump(checkpoint, f)
     dist_new[:] = out.cpu().detach().numpy()
@@ -86,11 +90,43 @@ def _train_dnmf(
         new_model = copy.deepcopy(deep_nmf_original)
         new_optimizer = optim.Adam(new_model.parameters(), lr=new_config.lr)
 
-        learner = UnsupervisedLearner(
-            new_config, new_model, new_optimizer, mix_max, dist_mix_i, h_0_train
-        )
+        learner = UnsupervisedLearner(new_config, new_model, new_optimizer, mix_max, dist_mix_i, h_0_train)
         out, out34, deep_nmf = _train_unsupervised(learner)
         _handle_final_matrix(config, out, out34, deep_nmf, dist_mix_i)
+
+
+def _find_loss(
+    config: DnmfConfig,
+    deep_nmf_params: List[Parameter],
+    mix_max: tensor,
+    out: tensor,
+    dist_mix_i_tensor: tensor,
+    h_list: List[tensor],
+    features: int,
+) -> Tuple[tensor, tensor, tensor, tensor]:
+    if config.w1_option == "1":
+        dnmf_w = deep_nmf_params[1]
+    elif config.w1_option == "last":
+        dnmf_w = deep_nmf_params[len(deep_nmf_params) - 1]
+    elif config.w1_option == "algo":
+        w_i = deep_nmf_params[1].T
+        mix_tensor = mix_max.T
+        for j in range(len(h_list)):
+            w_i = generate_new_w(h_list[j].T, w_i, mix_tensor)
+        dnmf_w = nn.Softmax(1)(w_i.T)
+    else:
+        w_arrays = [nnls(out.data.numpy(), mix_max.T[f])[0] for f in range(features)]
+        nnls_w = np.stack(w_arrays, axis=-1)
+        dnmf_w = torch.from_numpy(nnls_w).float()
+
+    loss = cost_tns(mix_max, dnmf_w, out, config.l1_regularization, config.l2_regularization)
+    criterion = nn.MSELoss(reduction="mean")
+    loss2 = torch.sqrt(criterion(out, dist_mix_i_tensor))
+
+    out34 = out / (torch.clamp(out.sum(axis=1)[:, None], min=1e-12))
+    loss34 = torch.sqrt(criterion(out34, dist_mix_i_tensor))
+
+    return loss, loss2, loss34, out34
 
 
 def _train_unsupervised(learner: UnsupervisedLearner) -> Tuple[tensor, tensor, UnsuperNetNew]:
@@ -101,45 +137,18 @@ def _train_unsupervised(learner: UnsupervisedLearner) -> Tuple[tensor, tensor, U
 
     samples, features = mix_max.shape
     dist_mix_i_tensor = _tensoring(learner.dist_mix_i.values).to(config.device)
-    inputs = (learner.h_0.to(config.device), mix_max)
+    h_0 = learner.h_0.to(config.device)
+
+    inputs = (h_0, mix_max)
     torch.autograd.set_detect_anomaly(True)
     out = np.ndarray([])
     out34 = np.ndarray([])
-    fast_weights = OrderedDict((name, param) for (name, param) in deep_nmf.named_parameters())
-
     for i in range(config.unsupervised_train):
-
-        if i == 0:
-            loss, _ = self.forward_pass(in_, target)
-            grads = torch.autograd.grad(loss, self.parameters(), create_graph=True)
-        else:
-            loss, _ = self.forward_pass(in_, target, fast_weights)
-            grads = torch.autograd.grad(loss, fast_weights.values(), create_graph=True)
-
         out, h_list = deep_nmf(*inputs)
         deep_nmf_params = list(deep_nmf.parameters())
-
-        if config.w1_option == "1":
-            dnmf_w = deep_nmf_params[1]
-        elif config.w1_option == "last":
-            dnmf_w = deep_nmf_params[len(deep_nmf_params) - 1]
-        elif config.w1_option == "algo":
-            w_i = deep_nmf_params[1].T
-            mix_tensor = mix_max.T
-            for j in range(len(h_list)):
-                w_i = generate_new_w(h_list[j].T, w_i, mix_tensor)
-            dnmf_w = nn.Softmax(1)(w_i.T)
-        else:
-            w_arrays = [nnls(out.data.numpy(), mix_max.T[f])[0] for f in range(features)]
-            nnls_w = np.stack(w_arrays, axis=-1)
-            dnmf_w = torch.from_numpy(nnls_w).float()
-
-        loss = cost_tns(mix_max, dnmf_w, out, config.l1_regularization, config.l2_regularization)
-        criterion = nn.MSELoss(reduction="mean")
-        loss2 = torch.sqrt(criterion(out, dist_mix_i_tensor))
-
-        out34 = out / (torch.clamp(out.sum(axis=1)[:, None], min=1e-12))
-        loss34 = torch.sqrt(criterion(out34, dist_mix_i_tensor))
+        loss, loss2, loss34, out34 = _find_loss(
+            config, deep_nmf_params, mix_max, out, dist_mix_i_tensor, h_list, features
+        )
 
         if i % 4000 == 0:
             print(f"i = {i}, loss =  {loss.item()},  loss criterion = {loss2} loss34 is {loss34}")
@@ -168,12 +177,16 @@ def train_with_generated_data(
         generated_mix, generated_dist = generate_dists(ref_mat.T, train_index * 0.0001, config.dirichlet_alpha, rows)
         mix_dataframe[:] = generated_mix.detach().numpy().T
         _, mix_frame = _preprocess_dataframes(ref_mat, mix_dataframe.T, dist_matrix, config, True)
-        loss_values = train_supervised_one_sample(mix_frame, generated_dist.to(config.device), deep_nmf, optimizer, config.device)
+        loss_values = train_supervised_one_sample(
+            mix_frame, generated_dist.to(config.device), deep_nmf, optimizer, config.device
+        )
         if train_index % 8000 == 0:
             print(f"Train: Start train index: {train_index} with loss: {loss_values}")
 
 
-def train_supervised_one_sample(mix_max: DataFrame, dist_mat: tensor, deep_nmf: UnsuperNetNew, optimizer: Optimizer, device):
+def train_supervised_one_sample(
+    mix_max: DataFrame, dist_mat: tensor, deep_nmf: UnsuperNetNew, optimizer: Optimizer, device
+):
     n_h_rows, n_components = dist_mat.shape
     samples = mix_max.shape[1]
     h_0_train = _tensoring(

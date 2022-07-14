@@ -3,12 +3,12 @@ from pathlib import Path
 from eran_new.graphs.graph_algorithm import GraphAlgorithm
 
 overfir_params = GraphAlgorithm(
-    path=Path("C:\\Users\\Eran\\\Downloads\\new_results\\new_results"),
+    path=Path("C:\\Users\\Eran\\\Downloads\\new_results-3\\new_results"),
     use_signature=True,
     glob_signature="*).tsv",
     algorithm_description="Dnmf overfit",
     use_true_prop=False,
-    name="dnmf overfit",
+    name="dnmf overfit new",
     save_normalize_graph=True,
 )
 

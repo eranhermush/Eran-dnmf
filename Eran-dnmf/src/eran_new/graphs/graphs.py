@@ -12,8 +12,11 @@ from torch import nn
 from eran_new.data_formatter import format_dataframe
 from eran_new.train_utils import _tensoring
 
-TRUE_PATH_BASE = Path(
+TRUE_PATH_BASE_NEW = Path(
     "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\TrueProportionsNew"
+)
+TRUE_PATH_BASE = Path(
+    "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\TrueProportions"
 )
 GRAPH_SIZE = 12
 

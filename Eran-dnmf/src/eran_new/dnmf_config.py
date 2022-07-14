@@ -29,6 +29,7 @@ class DnmfConfig:
     lr: float = field(default=0.005, repr=False)
     dirichlet_alpha = field(default=1, repr=False)
     rewrite_exists_output: bool = field(default=True, repr=False)
+    inner_loop_size: int = field(default=1, repr=False)
     device = field(default=torch.device("cuda:0" if torch.cuda.is_available() else "cpu"), repr=False)
 
     @property
