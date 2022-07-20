@@ -25,7 +25,7 @@ class DnmfConfig:
     l1_regularization = field(default=0)
     l2_regularization = field(default=1)
     supervised_train = field(default=80000, repr=False)
-    unsupervised_train = field(default=10000, repr=False)
+    unsupervised_train = field(default=10000, repr=True)
     lr: float = field(default=0.005, repr=False)
     dirichlet_alpha = field(default=1, repr=False)
     rewrite_exists_output: bool = field(default=True, repr=False)
