@@ -23,10 +23,11 @@ def main():
 
 
 def run_main(ref_folder, output_folder, mix_folder, dist_folder):
-    wo_options = ["1", "algo", "last"]
-    use_gedit_options = [True]
-    num_layers_options = [2, 4]
+    wo_options = ["algo"]
+    num_layers_options = [4, 5, 7]
     unsupervised_lr = 0.005
+    supervised_trains = [50000, 80000]
+    total_sigs = [75, 50]
     config_range = DnmfRange(wo_options, unsupervised_lr)
 
     refs = []
@@ -39,29 +40,31 @@ def run_main(ref_folder, output_folder, mix_folder, dist_folder):
         for mix in mixes:
             mix_p = Path(mix)
             dist_path = Path(dist_folder) / f"TrueProps{mix_p.name}"
-            for use_gedit_option in use_gedit_options:
-                for num_layers_option in num_layers_options:
-                    config = DnmfConfig(
-                        use_gedit_option,
-                        True,
-                        "1",
-                        output_folder=Path(output_folder),
-                        ref_path=Path(ref_name),
-                        mix_path=mix_p,
-                        dist_path=dist_path,
-                        num_layers=num_layers_option,
-                        supervised_train=20,
-                        unsupervised_train=20,
-                        lr=0.01,
-                        rewrite_exists_output=False,
-                    )
-                    print(config.full_str())
-                    train_manager(config, config_range)
+            for num_layers_option in num_layers_options:
+                for supervised_train in supervised_trains:
+                    for total_sig in total_sigs:
+                        config = DnmfConfig(
+                            True,
+                            True,
+                            "algo",
+                            output_folder=Path(output_folder),
+                            ref_path=Path(ref_name),
+                            mix_path=mix_p,
+                            dist_path=dist_path,
+                            num_layers=num_layers_option,
+                            supervised_train=supervised_train,
+                            unsupervised_train=50001,
+                            rewrite_exists_output=False,
+                            total_sigs=total_sig,
+                            lr=0.009,
+                        )
+                        print(config.full_str())
+                        train_manager(config, config_range)
 
 
 if __name__ == "__main__":
     output_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/17.5/2_results/"
-    ref_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/ref_mat_3/"
-    dist_path = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/TrueProportionsNew/"
-    mix_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/newData/"
+    ref_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/ref_mat_5/"
+    dist_path = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/TrueProportions/"
+    mix_folder = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/m/"
     run_main(ref_folder, output_folder, mix_folder, dist_path)

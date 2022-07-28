@@ -1,5 +1,9 @@
+import torch
+
 from layers.unsuper_layer import UnsuperLayer
 import torch.nn as nn
+
+EPSILON = torch.finfo(torch.float32).eps
 
 
 class UnsuperNetNew(nn.Module):
@@ -16,16 +20,24 @@ class UnsuperNetNew(nn.Module):
         super(UnsuperNetNew, self).__init__()
         self.n_layers = n_layers
         self.deep_nmfs = nn.ModuleList([UnsuperLayer(comp, features, l_1, l_2) for i in range(self.n_layers)])
+        self.l_1 = l_1
+        self.l_2 = l_2
         # self.softmax = nn.Softmax(1)
 
-    def forward(self, h, x, weights=None):
+    def forward(self, h, x):
         # sequencing the layers and forward pass through the network
-        h_list = []
-        weights_i = None
+        w = None
         for i, l in enumerate(self.deep_nmfs):
-            if weights:
-                weights_i = weights[f"deep_nmfs.{i}.fc1.weight"], weights[f"deep_nmfs.{i}.fc2.weight"]
-            h = l(h, x, weights_i)
-            h_list.append(h)
-        return h, h_list
-        # return self.softmax(h), h_list
+            h = l(h, x)
+            numerator = h.T.matmul(x)
+            if i == 0:
+                delta = l.fc2.weight
+            else:
+                delta = w
+            denominator = torch.add(h.T.matmul(h).matmul(delta), EPSILON)
+            div = torch.div(numerator, denominator)
+            w = torch.mul(delta, div)
+
+        d = x - h.matmul(w)
+        loss = (0.5 * torch.pow(d, 2).sum() + self.l_1 * h.sum() + 0.5 * self.l_2 * torch.pow(h, 2).sum()) / h.shape[0]
+        return h, loss

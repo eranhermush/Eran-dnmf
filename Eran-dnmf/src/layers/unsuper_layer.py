@@ -1,6 +1,5 @@
-import torch.nn as nn
-import torch.nn.functional as F
 import torch
+import torch.nn as nn
 
 EPSILON = torch.finfo(torch.float32).eps
 
@@ -21,16 +20,9 @@ class UnsuperLayer(nn.Module):
         # self.softmax = nn.Softmax(1)
         # self.relu = nn.Tanh()
 
-    def forward(self, y, x, weights=None):
-        if weights is None:
-            denominator = torch.add(self.fc1(y), self.l_2 * y + self.l_1 + EPSILON)
-            numerator = self.fc2(x)
-            delta = torch.div(numerator, denominator)
-            return torch.mul(delta, y)
-        fc1 = F.linear(y, weights[0])
-        fc2 = F.linear(x, weights[1])
-        denominator = torch.add(fc1, self.l_2 * y + self.l_1 + EPSILON)
-        numerator = fc2
+    def forward(self, y, x):
+        denominator = torch.add(self.fc1(y), self.l_2 * y + self.l_1 + EPSILON)
+        numerator = self.fc2(x)
         delta = torch.div(numerator, denominator)
         return torch.mul(delta, y)
 

@@ -11,25 +11,25 @@ ZERO_INCOMPLETE_SIZE = 0.5
 
 
 def run_gedit(
-    mix_max_original: DataFrame, ref_mat_original: DataFrame, total_sigs: int, use_all_genes: bool = False
-) -> Tuple[DataFrame, DataFrame]:
-    ref_mat = ref_mat_original.copy()
-    mix_max = mix_max_original.copy()
+    mix_max: DataFrame, ref_mat: DataFrame, total_sigs: int, use_all_genes: bool = False
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+
     ref_mat = ref_mat[(ref_mat != 0).any(axis=1)]
-    mix_max[:] = _quantile_normalize(mix_max, ref_mat)
+    mix_max[:] = _quantile_normalize(mix_max.to_numpy(), ref_mat.to_numpy())
     share_mix, share_ref = get_shared_indexes(mix_max, ref_mat)
     if not use_all_genes:
         sig_ref = _select_sub_genes_entropy(share_ref, total_sigs)
         share_mix, share_ref = get_shared_indexes(mix_max, sig_ref)
-    return _normalize_zero_one(share_ref, share_mix)
+    ref, mix = _normalize_zero_one(share_ref.to_numpy(), share_mix.to_numpy())
+    return ref, mix, share_ref.index.to_numpy()
 
 
-def _quantile_normalize(mix_max: DataFrame, ref_mat: DataFrame) -> np.ndarray:
-    flatten_ref = ref_mat.to_numpy().flatten()
+def _quantile_normalize(mix_data: np.ndarray, ref_data: np.ndarray) -> np.ndarray:
+    flatten_ref = ref_data.flatten()
     flatten_ref.sort()
 
-    sorted_indexes_mix = mix_max.T.to_numpy().argsort().argsort()
-    sorted_indexes_mix = ((sorted_indexes_mix / ((mix_max.shape[0]) - 1)) * (len(flatten_ref) - 1)).astype(int)
+    sorted_indexes_mix = mix_data.T.argsort().argsort()
+    sorted_indexes_mix = ((sorted_indexes_mix / ((mix_data.shape[0]) - 1)) * (len(flatten_ref) - 1)).astype(int)
     return flatten_ref[sorted_indexes_mix].T
 
 
@@ -56,8 +56,9 @@ def _select_sub_genes_entropy(ref_mat: DataFrame, total_sigs: int) -> DataFrame:
     return ref_mat.loc[genes]
 
 
-def _normalize_zero_one(ref_mat: DataFrame, mix_mat: DataFrame) -> Tuple[DataFrame, DataFrame]:
-    merged_mat = pd.concat([ref_mat, mix_mat], axis=1)
+def _normalize_zero_one(ref_mat: np.ndarray, mix_mat: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    # merged_mat = pd.concat([ref_mat, mix_mat], axis=1)
+    merged_mat = np.concatenate((ref_mat, mix_mat), axis=1)
     min_merged = merged_mat.min(axis=1)
     max_merged = merged_mat.max(axis=1)
     ref_mat = ((ref_mat.T - min_merged) / (max_merged - min_merged)).T

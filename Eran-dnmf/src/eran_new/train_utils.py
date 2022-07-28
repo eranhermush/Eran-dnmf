@@ -3,7 +3,6 @@ from typing import Tuple
 import numpy as np
 import torch
 from numpy import ndarray
-from pandas import DataFrame
 from scipy.optimize import nnls
 from torch import tensor, optim
 from torch.optim import Optimizer
@@ -14,7 +13,7 @@ from layers.unsuper_net_new import UnsuperNetNew
 EPSILON = torch.finfo(torch.float32).eps
 
 
-def _init_dnmf(ref_mat: DataFrame, mix_max: DataFrame, config: DnmfConfig) -> Tuple[UnsuperNetNew, tensor, Optimizer]:
+def _init_dnmf(ref_mat: ndarray, mix_max: ndarray, config: DnmfConfig) -> Tuple[UnsuperNetNew, tensor, Optimizer]:
     features, n_components = ref_mat.shape
     samples, features = mix_max.shape
     deep_nmf = UnsuperNetNew(
@@ -35,10 +34,10 @@ def _init_dnmf(ref_mat: DataFrame, mix_max: DataFrame, config: DnmfConfig) -> Tu
                 w.data = _tensoring(np.dot(ref_mat.T, ref_mat))
                 # w.requires_grad = False
             elif w_index == 1:
-                w.data = _tensoring(ref_mat.values.T)
+                w.data = _tensoring(ref_mat.T)
                 # w.requires_grad = False
 
-        h_0_train = [nnls(ref_mat.values, mix_max.values[kk])[0] for kk in range(len(mix_max))]
+        h_0_train = [nnls(ref_mat, mix_max[kk])[0] for kk in range(len(mix_max))]
         h_0_train = _tensoring(np.asanyarray([d / sum(d) for d in h_0_train]))
     optimizerADAM = optim.Adam(deep_nmf.parameters(), lr=config.lr)
     return deep_nmf, h_0_train, optimizerADAM
@@ -51,14 +50,13 @@ def _tensoring(matrix: ndarray) -> tensor:
     return torch.from_numpy(matrix).float()
 
 
-def generate_dists(signature_data: DataFrame, std: float, alpha: int, mix_size: int) -> Tuple[tensor, tensor]:
-    alpha_arr = np.full((signature_data.shape[0]), alpha, dtype=int)
-    dist = np.asanyarray([np.random.dirichlet(alpha_arr) for _ in range(mix_size)], dtype=float)
+def generate_dists(signature_data: ndarray, std: float, alpha: int, mix_size: int) -> Tuple[ndarray, ndarray]:
+    dist = np.random.dirichlet(np.random.randint(1, 40, size=signature_data.shape[0]), mix_size)
 
     mix = dist.dot(signature_data)
     mix += np.random.normal(0, std, mix.shape)
     mix = np.maximum(mix, 0)
-    return _tensoring(mix).T, _tensoring(dist)
+    return mix.T, dist
 
 
 def generate_new_w(Hi, Wi, V):
