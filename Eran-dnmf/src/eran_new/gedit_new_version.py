@@ -14,7 +14,7 @@ def run_gedit(
     mix_max: DataFrame, ref_mat: DataFrame, total_sigs: int, use_all_genes: bool = False
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
-    ref_mat = ref_mat[(ref_mat != 0).any(axis=1)]
+    ref_mat = ref_mat.loc[(ref_mat != 0).any(axis=1)]
     mix_max[:] = _quantile_normalize(mix_max.to_numpy(), ref_mat.to_numpy())
     share_mix, share_ref = get_shared_indexes(mix_max, ref_mat)
     if not use_all_genes:
@@ -34,10 +34,10 @@ def _quantile_normalize(mix_data: np.ndarray, ref_data: np.ndarray) -> np.ndarra
 
 
 def _select_sub_genes_entropy(ref_mat: DataFrame, total_sigs: int) -> DataFrame:
-    ref_mat = ref_mat[(ref_mat == 0).mean(axis=1) <= ZERO_INCOMPLETE_SIZE]
+    ref_mat = ref_mat.loc[(ref_mat == 0).mean(axis=1) <= ZERO_INCOMPLETE_SIZE]
     all_sigs = total_sigs * ref_mat.shape[1]
     min_value = ref_mat[ref_mat != 0].min().min()
-    ref_mat.replace(to_replace=0, value=min_value, inplace=True)
+    ref_mat = ref_mat.replace(to_replace=0, value=min_value)
     normalize_ref = (ref_mat.T / ref_mat.sum(axis=1)).T
     entropy = -1 * entr(normalize_ref).sum(axis=1)
     max_index = ref_mat.idxmax(axis=1)

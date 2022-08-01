@@ -87,19 +87,20 @@ def create_both_pbmc_graph(algorithms: List[GraphAlgorithm], algo_size: int = 3)
 
 
 if __name__ == "__main__":
-    # nnls_params2 = GraphAlgorithm(
-    #     path=Path(
-    #         "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\nnls_cibersort_new\\new_data\\nnls"
-    #     ),
-    #     use_signature=False,
-    #     glob_signature="*.tsv",
-    #     algorithm_description="cibersort with Gedit",
-    #     use_true_prop=False,
-    #     name="cibersort",
-    #     save_normalize_graph=True,
-    # )
-    # copy_and_create_graph(nnls_params2, False)
+    nnls_params2 = GraphAlgorithm(
+        path=Path(
+            "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\nnls_cibersort_new\\geo\\nnls1"
+        ),
+        use_signature=False,
+        glob_signature="*.tsv",
+        algorithm_description="nnls with Gedit",
+        use_true_prop=False,
+        name="nnls",
+        save_normalize_graph=True,
+    )
+    copy_and_create_graph(nnls_params2, True)
     print("Start")
+    1/0
     all_algo = [overfir_params, no_overfir_params, nnls_params, cibersort_params, gedit_params]
     # copy_and_create_graph(overfir_params, True, True)
     [copy_and_create_graph(algo, True, False) for algo in all_algo]

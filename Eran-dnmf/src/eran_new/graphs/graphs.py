@@ -62,6 +62,7 @@ def get_folder_graphs(
             .replace("supervised_train", "train_size")
             .replace(").tsv", "")
             .replace(".tsv", "\n")
+            .replace(".txt", "\n")
             .replace(".csv", "\n")
             .replace("OUT", "")
             .replace("\n_\n", "")

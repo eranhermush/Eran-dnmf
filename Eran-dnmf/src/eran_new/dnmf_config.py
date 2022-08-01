@@ -4,6 +4,7 @@ from typing import List
 import torch
 from attr import define, field
 from numpy import ndarray
+from pandas import DataFrame
 from torch import tensor
 from torch.optim import Optimizer
 
@@ -37,6 +38,7 @@ class DnmfConfig:
         return self.output_folder / self.mix_path.name / self.ref_path.name / str(self.use_gedit) / f"{str(self)}.tsv"
 
     def full_str(self):
+        print(self.device)
         return f"{str(self)}, mix_path: {self.mix_path.name}, ref: {self.ref_path.name}, lr: {self.lr}, supervised_train: {self.supervised_train}, unsupervised_train: {self.unsupervised_train} device: {self.device}"
 
 
@@ -60,5 +62,5 @@ class UnsupervisedLearner:
     deep_nmf: UnsuperNetNew = field()
     optimizer: Optimizer = field()
     mix_max: ndarray = field()
-    dist_mix_i: ndarray = field()
+    dist_mix_i: DataFrame = field()
     h_0: tensor = field()

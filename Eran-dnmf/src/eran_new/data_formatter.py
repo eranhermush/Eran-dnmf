@@ -5,6 +5,7 @@ from eran_new.data_frame_utils import get_shared_indexes
 
 def format_dataframe(ref_mat: DataFrame, mix_mat: DataFrame) -> DataFrame:
     ref_mat = ref_mat.rename(_convert_name, axis="columns")
+    mix_mat = mix_mat.rename(_convert_name, axis="columns")
     ref_mat = ref_mat.groupby(level=0, axis=1).sum()
     _, ref_mat = get_shared_indexes(mix_mat.T, ref_mat.T)
     ref_mat = ref_mat.T

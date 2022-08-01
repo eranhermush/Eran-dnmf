@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+import torch
+
 from eran_new.dnmf_config import DnmfRange
 from eran_new.train import DnmfConfig, train_manager
 
@@ -23,6 +25,7 @@ def main():
 
 
 def run_main(ref_folder, output_folder, mix_folder, dist_folder):
+    torch.autograd.set_detect_anomaly(True)
     wo_options = ["algo"]
     num_layers_options = [4, 5, 7]
     unsupervised_lr = 0.005
@@ -36,8 +39,11 @@ def run_main(ref_folder, output_folder, mix_folder, dist_folder):
     mixes = []
     for filename in os.listdir(mix_folder):
         mixes.append(os.path.join(mix_folder, filename))
-    for ref_name in refs:
-        for mix in mixes:
+
+    for mix in mixes:
+        loss_dict = {}
+        learners = {}
+        for ref_name in refs:
             mix_p = Path(mix)
             dist_path = Path(dist_folder) / f"TrueProps{mix_p.name}"
             for num_layers_option in num_layers_options:
@@ -52,14 +58,20 @@ def run_main(ref_folder, output_folder, mix_folder, dist_folder):
                             mix_path=mix_p,
                             dist_path=dist_path,
                             num_layers=num_layers_option,
-                            supervised_train=supervised_train,
-                            unsupervised_train=50001,
+                            supervised_train=4,
+                            unsupervised_train=2,
                             rewrite_exists_output=False,
                             total_sigs=total_sig,
-                            lr=0.009,
+                            lr=0.005,
                         )
                         print(config.full_str())
-                        train_manager(config, config_range)
+                        learner, loss34 = train_manager(config, config_range)
+                        key = learner.config.full_str()
+                        loss_dict[key] = loss34
+                        learners[key] = learner
+        best_learner_conf = min(loss_dict, key=loss_dict.get)
+        best_learner = learners[best_learner_conf]
+
 
 
 if __name__ == "__main__":
