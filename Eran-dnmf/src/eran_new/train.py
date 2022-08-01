@@ -214,7 +214,7 @@ def train_with_generated_data_unsupervised(
             original_ref_mat.T, train_index * 0.0001, config.dirichlet_alpha, rows
         )
         mix_max = _quantile_normalize(generated_mix, original_ref_mat)
-        _, mix_frame = _normalize_zero_one(original_ref_mat, mix_max)
+        _, mix_max = _normalize_zero_one(original_ref_mat, mix_max)
 
         generated_dist = _tensoring(generated_dist).to(config.device)
         mix_max = mix_max.T
