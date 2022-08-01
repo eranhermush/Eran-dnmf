@@ -3,8 +3,7 @@ from pathlib import Path
 
 import torch
 
-from eran_new.dnmf_config import DnmfRange
-from eran_new.train import DnmfConfig, train_manager
+from eran_new.train import DnmfConfig, train_manager, handle_best
 
 
 def main():
@@ -26,12 +25,9 @@ def main():
 
 def run_main(ref_folder, output_folder, mix_folder, dist_folder):
     torch.autograd.set_detect_anomaly(True)
-    wo_options = ["algo"]
     num_layers_options = [4, 5, 7]
-    unsupervised_lr = 0.005
     supervised_trains = [50000, 80000]
     total_sigs = [75, 50]
-    config_range = DnmfRange(wo_options, unsupervised_lr)
 
     refs = []
     for filename in os.listdir(ref_folder):
@@ -50,9 +46,9 @@ def run_main(ref_folder, output_folder, mix_folder, dist_folder):
                 for supervised_train in supervised_trains:
                     for total_sig in total_sigs:
                         config = DnmfConfig(
-                            True,
-                            True,
-                            "algo",
+                            use_gedit=True,
+                            use_w0=True,
+                            w1_option="algo",
                             output_folder=Path(output_folder),
                             ref_path=Path(ref_name),
                             mix_path=mix_p,
@@ -65,13 +61,13 @@ def run_main(ref_folder, output_folder, mix_folder, dist_folder):
                             lr=0.005,
                         )
                         print(config.full_str())
-                        learner, loss34 = train_manager(config, config_range)
+                        learner, loss34 = train_manager(config)
                         key = learner.config.full_str()
                         loss_dict[key] = loss34
                         learners[key] = learner
         best_learner_conf = min(loss_dict, key=loss_dict.get)
         best_learner = learners[best_learner_conf]
-
+        handle_best(best_learner)
 
 
 if __name__ == "__main__":

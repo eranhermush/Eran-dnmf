@@ -1,17 +1,39 @@
-from pandas import DataFrame
+from typing import Tuple, Optional
+
+from pandas import DataFrame, Index
 
 from eran_new.data_frame_utils import get_shared_indexes
 
+OTHER_NAME = "Other"
 
-def format_dataframe(ref_mat: DataFrame, mix_mat: DataFrame) -> DataFrame:
+
+def format_dataframe(
+    ref_mat: DataFrame, mix_dist: DataFrame, mix_mat: Optional[DataFrame] = None
+) -> Tuple[DataFrame, DataFrame, DataFrame]:
+    """
+    Assumes that the dimensions are:
+    ref_mat: genes * cells
+    mix_dist: samples * cells
+    nux_mat: genes * samples
+    """
     ref_mat = ref_mat.rename(_convert_name, axis="columns")
-    mix_mat = mix_mat.rename(_convert_name, axis="columns")
+    mix_dist = mix_dist.rename(_convert_name, axis="columns")
     ref_mat = ref_mat.groupby(level=0, axis=1).sum()
-    _, ref_mat = get_shared_indexes(mix_mat.T, ref_mat.T)
+    _, ref_mat = get_shared_indexes(mix_dist.T, ref_mat.T)
+    if OTHER_NAME in ref_mat.index:
+        ref_mat = ref_mat.drop(OTHER_NAME)
     ref_mat = ref_mat.T
-    difference_indexes = mix_mat.columns.difference(ref_mat.columns)
-    ref_mat[difference_indexes] = 0.0
-    return ref_mat
+    difference_cells = mix_dist.columns.difference(ref_mat.columns)
+    if OTHER_NAME in mix_dist.T.index and OTHER_NAME not in difference_cells:
+        difference_cells.append(Index([OTHER_NAME]))
+    print(f"Remove {list(difference_cells), len(difference_cells)} cells")
+    mix_relevant_indexes = mix_dist[difference_cells].sum(axis=1) < 0.51
+    mix_dist = mix_dist[mix_relevant_indexes]
+    if mix_mat is not None:
+        mix_mat = mix_mat.T[mix_relevant_indexes]
+        mix_mat = mix_mat.T
+    mix_dist = mix_dist.drop(difference_cells, axis=1)
+    return ref_mat, mix_dist, mix_mat
 
 
 def _convert_name(cell_name: str) -> str:
@@ -48,4 +70,4 @@ def _convert_name(cell_name: str) -> str:
         return "B Cells"
     if cell_name in ["p-value", "correlation", "rmse", "absolute score (sig.score)"]:
         return "trash"
-    return "Other"
+    return OTHER_NAME

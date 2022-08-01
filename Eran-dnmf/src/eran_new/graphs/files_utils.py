@@ -100,7 +100,6 @@ if __name__ == "__main__":
     )
     copy_and_create_graph(nnls_params2, True)
     print("Start")
-    1/0
     all_algo = [overfir_params, no_overfir_params, nnls_params, cibersort_params, gedit_params]
     # copy_and_create_graph(overfir_params, True, True)
     [copy_and_create_graph(algo, True, False) for algo in all_algo]
