@@ -34,20 +34,24 @@ def get_folder_graphs(
 ) -> List[str]:
     dataset = path.name
     true_prop = TRUE_PATH_BASE / f"TrueProps{dataset}"  # {dataset.split('_')[0]}NormMix.tsv"
-    true_prop_pandas = pd.read_csv(true_prop, sep="\t", index_col=0)
-    true_prop_pandas_tensor = _tensoring(true_prop_pandas.values)
     criterion = nn.MSELoss(reduction="mean")
     loss_arr = []
     names_arr = []
     result_dict = {}
     for algorithm_name in os.listdir(path):
+        true_prop_pandas = pd.read_csv(true_prop, sep="\t", index_col=0)
+        true_prop_pandas.index = true_prop_pandas.index.str.upper()
+
         algorithm = str(algorithm_name)
         algo_pandas = _get_algo_frame(path / algorithm, true_prop_pandas, use_true_prop)
         algo_pandas, true_prop_pandas, _ = format_dataframe(algo_pandas, true_prop_pandas)
+        algo_pandas.index = true_prop_pandas.index
+        true_prop_pandas_tensor = _tensoring(true_prop_pandas.values)
+        algo_pandas = algo_pandas.loc[algo_pandas.index.intersection(true_prop_pandas.index)]
+        assert algo_pandas.index.tolist() == true_prop_pandas.index.tolist()
         algo_tensor = _tensoring(algo_pandas.values)
         algo_pandas_normalized = algo_tensor / (torch.clamp(algo_tensor.sum(axis=1)[:, None], min=1e-12))
-        if algo_pandas_normalized.shape != true_prop_pandas_tensor.shape:
-            continue
+        assert algo_pandas_normalized.shape == true_prop_pandas_tensor.shape
         loss = torch.sqrt(criterion(algo_pandas_normalized, true_prop_pandas_tensor))
         loss_arr.append(float(loss))
         algorithm = algo_name + "\n" + algorithm

@@ -129,6 +129,6 @@ if __name__ == "__main__":
     # MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/Nmf-Objects-2"
     MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/newData-quan/"
     # output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/gedit_data/Yes/"
-    output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/gedit-quan/"
+    output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/gedit-quan500/"
     # NumSigs = 500
     gedit_main(REF_FOLDER, MIX_FOLDER, output)  # , NumSigs=str(NumSigs))pbmc2

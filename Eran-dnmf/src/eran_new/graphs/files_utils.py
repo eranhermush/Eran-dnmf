@@ -58,7 +58,7 @@ def create_best_graph(algorithms: List[GraphAlgorithm], algo_size: int = 3) -> N
         create_graph(loss_arr, names_arr, pbm_folder.name, "Best results - all algorithms")
 
 
-def create_both_pbmc_graph(algorithms: List[GraphAlgorithm], algo_size: int = 3) -> None:
+def create_both_pbmc_graph(algorithms: List[GraphAlgorithm]) -> None:
     result_all = []
     for algo in algorithms:
         result = {}
@@ -66,6 +66,38 @@ def create_both_pbmc_graph(algorithms: List[GraphAlgorithm], algo_size: int = 3)
             if "PBMC" in pbm_folder.name:
                 sorted_lists = get_folder_graphs(
                     algo.path / "final_results" / pbm_folder.name, algo.use_true_prop, algo.name, 100
+                )
+                sorted_lists = dict(sorted_lists)
+                sorted_lists = {
+                    x.lower()
+                    .replace("pbmc1", "")
+                    .replace("pbmc2", "")
+                    .replace("normmix", "")
+                    .split("\n")[0]: sorted_lists[x]
+                    for x in set(sorted_lists)
+                }
+
+                if result == {}:
+                    result = sorted_lists
+                else:
+                    result = {k: 0.5 * (result.get(k) + sorted_lists.get(k)) for k in set(result) & set(sorted_lists)}
+        print(f"algo {algo} result {result}")
+        result_all.extend(sorted(result.items(), key=lambda x: x[1])[:5])
+
+    result_all = sorted(result_all, key=lambda x: x[1])
+    names_arr = [t[0] for t in result_all]
+    loss_arr = [float(t[1]) for t in result_all]
+    create_graph(loss_arr, names_arr, "pbmc-both", "Best results - all algorithms")
+
+
+def create_both_pbmc_graph1(algorithms: List[GraphAlgorithm], algo_size: int = 3) -> None:
+    result_all = []
+    for algo in algorithms:
+        result = {}
+        for pbm_folder in (algorithms[0].path / "final_results").iterdir():
+            if "PBMC" in pbm_folder.name:
+                sorted_lists = get_folder_graphs(
+                    algo.path / "final_results" / pbm_folder.name, algo.use_true_prop, algo.name, 1
                 )
                 sorted_lists = dict(sorted_lists)
                 sorted_lists = {
@@ -87,6 +119,22 @@ def create_both_pbmc_graph(algorithms: List[GraphAlgorithm], algo_size: int = 3)
 
 
 if __name__ == "__main__":
+    nnls_params2 = GraphAlgorithm(
+        path=Path("C:\\Users\\Eran\\Downloads\\nnls_new_nnls"),
+        use_signature=False,
+        glob_signature="*.tsv",
+        algorithm_description="nnls with Gedit",
+        use_true_prop=False,
+        name="nnls",
+        save_normalize_graph=True,
+    )
+
+    # all_algo = [overfir_params, no_overfir_params, nnls_params, cibersort_params, gedit_params]
+    # copy_and_create_graph(nnls_params2, True, False)
+    create_both_pbmc_graph([nnls_params2])
+
+
+if __name__ == "__main__1":
     nnls_params2 = GraphAlgorithm(
         path=Path(
             "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\nnls_cibersort_new\\geo\\nnls1"

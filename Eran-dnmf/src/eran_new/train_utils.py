@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 
 import numpy as np
 import torch
@@ -11,6 +11,14 @@ from eran_new.dnmf_config import DnmfConfig
 from layers.unsuper_net_new import UnsuperNetNew
 
 EPSILON = torch.finfo(torch.float32).eps
+CELL_MAPPER = {
+    "B Cells": [5, 10],
+    "CD8 T Cells": [5, 30],
+    "CD4 T Cells": [25, 60],
+    "NK Cells": [10, 30],
+    "Monocytes": [5, 10],
+    "Neutrophils": [40, 60],
+}
 
 
 def _init_dnmf(ref_mat: ndarray, mix_max: ndarray, config: DnmfConfig) -> Tuple[UnsuperNetNew, tensor, Optimizer]:
@@ -50,8 +58,21 @@ def _tensoring(matrix: ndarray) -> tensor:
     return torch.from_numpy(matrix).float()
 
 
-def generate_dists(signature_data: ndarray, std: float, alpha: int, mix_size: int) -> Tuple[ndarray, ndarray]:
-    dist = np.random.dirichlet(np.random.randint(1, 40, size=signature_data.shape[0]), mix_size)
+def _get_randon_scope(cells: List[str], result_dim: Tuple[int, int]) -> ndarray:
+    small_mapper = lambda key: CELL_MAPPER.get(key, [0, 20])[0]
+    big_mapper = lambda key: CELL_MAPPER.get(key, [0, 20])[1]
+    small_vector = np.vectorize(small_mapper)(cells)
+    big_vector = np.vectorize(big_mapper)(cells)
+
+    diff = big_vector - small_vector
+    random_vector = np.random.random_sample(result_dim)
+    random_vector = random_vector * diff + small_vector
+    dirichlet = np.asanyarray([np.random.dirichlet(random_vector[i]) for i in range(len(random_vector))])
+    return dirichlet
+
+
+def generate_dists(signature_data: ndarray, std: float, mix_size: int, cells: List[str]) -> Tuple[ndarray, ndarray]:
+    dist = _get_randon_scope(cells, (mix_size, signature_data.shape[0]))
 
     mix = dist.dot(signature_data)
     mix += np.random.normal(0, std, mix.shape)

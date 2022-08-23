@@ -19,6 +19,7 @@ def format_dataframe(
     ref_mat = ref_mat.rename(_convert_name, axis="columns")
     mix_dist = mix_dist.rename(_convert_name, axis="columns")
     ref_mat = ref_mat.groupby(level=0, axis=1).sum()
+    mix_dist = mix_dist.groupby(level=0, axis=1).sum()
     _, ref_mat = get_shared_indexes(mix_dist.T, ref_mat.T)
     if OTHER_NAME in ref_mat.index:
         ref_mat = ref_mat.drop(OTHER_NAME)
@@ -33,6 +34,7 @@ def format_dataframe(
         mix_mat = mix_mat.T[mix_relevant_indexes]
         mix_mat = mix_mat.T
     mix_dist = mix_dist.drop(difference_cells, axis=1)
+    assert mix_dist.columns.tolist() == ref_mat.columns.tolist()
     return ref_mat, mix_dist, mix_mat
 
 
