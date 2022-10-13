@@ -27,8 +27,10 @@ def format_dataframe(
     difference_cells = mix_dist.columns.difference(ref_mat.columns)
     if OTHER_NAME in mix_dist.T.index and OTHER_NAME not in difference_cells:
         difference_cells.append(Index([OTHER_NAME]))
-    print(f"Remove {list(difference_cells), len(difference_cells)} cells")
     mix_relevant_indexes = mix_dist[difference_cells].sum(axis=1) < 0.51
+    print(
+        f"Remove {list(difference_cells), len(difference_cells)} cells, Work with {len(mix_dist[mix_relevant_indexes])} samples / {mix_dist.shape[0]} samples"
+    )
     mix_dist = mix_dist[mix_relevant_indexes]
     if mix_mat is not None:
         mix_mat = mix_mat.T[mix_relevant_indexes]

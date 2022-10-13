@@ -10,6 +10,7 @@ from pandas import DataFrame
 from torch import nn
 
 from eran_new.data_formatter import format_dataframe
+from eran_new.train import _preprocess_dataframes
 from eran_new.train_utils import _tensoring
 
 TRUE_PATH_BASE_NEW = Path(
@@ -18,7 +19,9 @@ TRUE_PATH_BASE_NEW = Path(
 TRUE_PATH_BASE = Path(
     "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\TrueProportions"
 )
-GRAPH_SIZE = 12
+MIX_BASE = Path("C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\Mixes")
+REF_BASE = Path("C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\RefMats")
+GRAPH_SIZE = 1
 
 
 def _get_algo_frame(algo_path: Path, true_prop: DataFrame, use_true_prop: bool) -> DataFrame:
@@ -34,24 +37,47 @@ def get_folder_graphs(
 ) -> List[str]:
     dataset = path.name
     true_prop = TRUE_PATH_BASE / f"TrueProps{dataset}"  # {dataset.split('_')[0]}NormMix.tsv"
+    mix_path = MIX_BASE / dataset
     criterion = nn.MSELoss(reduction="mean")
     loss_arr = []
     names_arr = []
     result_dict = {}
+    unsup_result_dict = {}
+    refs = [x for x in list(REF_BASE.iterdir())]
+    final_ref = None
     for algorithm_name in os.listdir(path):
+        for ref in refs:
+            ref_name = ref.name.split(".")[0].lower()
+            if ref_name in algorithm_name.lower():
+                final_ref = ref
+        assert final_ref is not None
+
         true_prop_pandas = pd.read_csv(true_prop, sep="\t", index_col=0)
-        true_prop_pandas.index = true_prop_pandas.index.str.upper()
+        true_prop_pandas.index = true_prop_pandas.index.astype(str).str.upper()
 
         algorithm = str(algorithm_name)
         algo_pandas = _get_algo_frame(path / algorithm, true_prop_pandas, use_true_prop)
+
+        ref_panda = pd.read_csv(REF_BASE / final_ref, sep="\t", index_col=0)
+        ref_panda.index = ref_panda.index.str.upper()
+
+        mix_panda_original = pd.read_csv(mix_path, sep="\t", index_col=0)
+        mix_panda_original.index = mix_panda_original.index.str.upper()
+        mix_panda_original.columns = mix_panda_original.columns.str.upper()
+
+        ref_panda_gedit, mix_panda, _, _ = _preprocess_dataframes(ref_panda, mix_panda_original, true_prop_pandas, 50)
+
         algo_pandas, true_prop_pandas, _ = format_dataframe(algo_pandas, true_prop_pandas)
-        algo_pandas.index = true_prop_pandas.index
+        algo_pandas.index = algo_pandas.index.astype(str).str.upper()
         true_prop_pandas_tensor = _tensoring(true_prop_pandas.values)
         algo_pandas = algo_pandas.loc[algo_pandas.index.intersection(true_prop_pandas.index)]
         assert algo_pandas.index.tolist() == true_prop_pandas.index.tolist()
         algo_tensor = _tensoring(algo_pandas.values)
         algo_pandas_normalized = algo_tensor / (torch.clamp(algo_tensor.sum(axis=1)[:, None], min=1e-12))
         assert algo_pandas_normalized.shape == true_prop_pandas_tensor.shape
+
+        unsup_error = _tensoring(mix_panda) - _tensoring(ref_panda_gedit).matmul(algo_pandas_normalized.T)
+        unsup_error = 0.5 * torch.pow(unsup_error, 2).sum()
         loss = torch.sqrt(criterion(algo_pandas_normalized, true_prop_pandas_tensor))
         loss_arr.append(float(loss))
         algorithm = algo_name + "\n" + algorithm
@@ -76,7 +102,10 @@ def get_folder_graphs(
             .replace("l2_regularization=1", "")
         )
         names_arr.append(algorithm)
+        while algorithm in result_dict:
+            algorithm = algorithm + "\n a"
         result_dict[algorithm] = float(loss)
+        unsup_result_dict[algorithm] = float(unsup_error)
         if save_normalize_graph:
             directory = path.parent.parent / "normalized_graphs" / path.name
             directory.mkdir(exist_ok=True, parents=True)
@@ -84,8 +113,14 @@ def get_folder_graphs(
             algo_pandas[:] = algo_pandas_normalized.tolist()
             algo_pandas.to_csv(normalize_graph_path, sep="\t")
 
-    sorted_lists = sorted(result_dict.items(), key=lambda x: x[1])[:graph_size]
-    return sorted_lists
+    unsup_sorted_lists = sorted(unsup_result_dict.items(), key=lambda x: x[1])[:graph_size]
+    best_key = unsup_sorted_lists[0][0]
+    result = [(best_key, result_dict[best_key])]
+    # sorted_lists = sorted(result_dict.items(), key=lambda x: x[1])[:graph_size]
+    for i in range(len(result)):
+        key, value = result[i]
+        result[i] = (key.split("\n")[0], value)
+    return result
 
 
 def create_graph(loss_arr: List[float], names_arr: List[str], name: str, description: str) -> None:

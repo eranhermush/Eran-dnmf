@@ -120,15 +120,25 @@ def gedit_main(ref_folder, mix_folder, output_folder, use_all_genes=False, signa
 
     for ref in ref_files:
         for mix in mix_files:
-            print("Working in ref=" + ref, " mix = " + mix)
-            run_gedit_pre(mix, ref, output_folder, use_all_genes, NumSigs)
+            if "Qu" in mix:
+                print("Working in ref=" + ref, " mix = " + mix)
+                run_gedit_pre(mix, ref, output_folder, use_all_genes, NumSigs)
 
 
 if __name__ == "__main__":
-    REF_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/RefMats/"
+    REF_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/RefMats-relevant/"
     # MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/Nmf-Objects-2"
-    MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/newData-quan/"
+    # MIX_FOLDER = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/codefacs/bulkRelevant/"
+    MIX_FOLDER = "/Users/Eran/Downloads/drive-download-20221009T113207Z-001/"
     # output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/25.3/gedit_data/Yes/"
-    output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/24.6/gedit-quan500/"
+    # output = "/Users/Eran/Documents/benchmarking-transcriptomics-deconvolution/Figure1/Eran/codefacs/gedit/"
+    output = "/Users/Eran/Downloads/drive-download-20221009T113207Z-001/"
     # NumSigs = 500
-    gedit_main(REF_FOLDER, MIX_FOLDER, output)  # , NumSigs=str(NumSigs))pbmc2
+    folders = os.listdir(MIX_FOLDER)
+    for folder in folders:
+        if folder[0] == '1':
+            mix = MIX_FOLDER + folder
+            out = output + folder + "/gedit"
+            os.makedirs(out, exist_ok=True)
+            print(f"on mix = {mix} and out = {out}")
+            gedit_main(REF_FOLDER, mix, out)  # , NumSigs=str(NumSigs))pbmc2

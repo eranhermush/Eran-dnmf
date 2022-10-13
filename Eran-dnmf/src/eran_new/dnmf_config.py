@@ -19,7 +19,8 @@ class DnmfConfig:
     mix_path: Path = field(repr=False)
     ref_path: Path = field(repr=False)
     dist_path: Path = field(repr=False)
-    output_folder: str = field(repr=False)
+    output_folder: Path = field(repr=False)
+    unsup_output_folder: Path = field(repr=False)
 
     num_layers: int = field(default=4)
     total_sigs: int = field(default=50)
@@ -36,6 +37,16 @@ class DnmfConfig:
     @property
     def output_path(self):
         return self.output_folder / self.mix_path.name / self.ref_path.name / str(self.use_gedit) / f"{str(self)}.tsv"
+
+    @property
+    def unsup_output_path(self):
+        return (
+            Path(self.unsup_output_folder)
+            / self.mix_path.name
+            / self.ref_path.name
+            / str(self.use_gedit)
+            / f"{str(self)}.tsv"
+        )
 
     def full_str(self):
         print(self.device)
@@ -64,3 +75,4 @@ class UnsupervisedLearner:
     mix_max: ndarray = field()
     dist_mix_i: DataFrame = field()
     h_0: tensor = field()
+    ref: ndarray = field(default=None)

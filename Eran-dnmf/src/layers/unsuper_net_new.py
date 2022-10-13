@@ -37,7 +37,7 @@ class UnsuperNetNew(nn.Module):
             denominator = torch.add(h.T.matmul(h).matmul(delta), EPSILON)
             div = torch.div(numerator, denominator)
             w = torch.mul(delta, div)
-
+        w = w.detach().clone()
         h = h / (torch.clamp(h.sum(axis=1)[:, None], min=1e-12))
         d = x - h.matmul(w)
         loss = (0.5 * torch.pow(d, 2).sum() + self.l_1 * h.sum() + 0.5 * self.l_2 * torch.pow(h, 2).sum()) / h.shape[0]

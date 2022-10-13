@@ -43,15 +43,16 @@ def copy_and_create_graph(algo_params: GraphAlgorithm, create_new_results=False,
         )
 
 
-def create_best_graph(algorithms: List[GraphAlgorithm], algo_size: int = 3) -> None:
+def create_best_graph(algorithms: List[GraphAlgorithm], algo_size: int = 1) -> None:
     for pbm_folder in (algorithms[0].path / "final_results").iterdir():
         loss_list = []
         for algo in algorithms:
-            loss_list.extend(
-                get_folder_graphs(
-                    algo.path / "final_results" / pbm_folder.name, algo.use_true_prop, algo.name, algo_size
+            if (algo.path / "final_results" / pbm_folder.name).is_dir():
+                loss_list.extend(
+                    get_folder_graphs(
+                        algo.path / "final_results" / pbm_folder.name, algo.use_true_prop, algo.name, algo_size
+                    )
                 )
-            )
         sorted_lists = sorted(loss_list, key=lambda x: x[1])
         names_arr = [t[0] for t in sorted_lists]
         loss_arr = [float(t[1]) for t in sorted_lists]
@@ -65,7 +66,7 @@ def create_both_pbmc_graph(algorithms: List[GraphAlgorithm]) -> None:
         for pbm_folder in (algorithms[0].path / "final_results").iterdir():
             if "PBMC" in pbm_folder.name:
                 sorted_lists = get_folder_graphs(
-                    algo.path / "final_results" / pbm_folder.name, algo.use_true_prop, algo.name, 100
+                    algo.path / "final_results" / pbm_folder.name, algo.use_true_prop, algo.name
                 )
                 sorted_lists = dict(sorted_lists)
                 sorted_lists = {
@@ -90,7 +91,7 @@ def create_both_pbmc_graph(algorithms: List[GraphAlgorithm]) -> None:
     create_graph(loss_arr, names_arr, "pbmc-both", "Best results - all algorithms")
 
 
-def create_both_pbmc_graph1(algorithms: List[GraphAlgorithm], algo_size: int = 3) -> None:
+def create_both_pbmc_graph1(algorithms: List[GraphAlgorithm]) -> None:
     result_all = []
     for algo in algorithms:
         result = {}
@@ -118,7 +119,7 @@ def create_both_pbmc_graph1(algorithms: List[GraphAlgorithm], algo_size: int = 3
     create_graph(loss_arr, names_arr, "pbmc-both", "Best results - all algorithms")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__1":
     nnls_params2 = GraphAlgorithm(
         path=Path("C:\\Users\\Eran\\Downloads\\nnls_new_nnls"),
         use_signature=False,
@@ -134,7 +135,7 @@ if __name__ == "__main__":
     create_both_pbmc_graph([nnls_params2])
 
 
-if __name__ == "__main__1":
+if __name__ == "__main__":
     nnls_params2 = GraphAlgorithm(
         path=Path(
             "C:\\Users\\Eran\\Documents\\benchmarking-transcriptomics-deconvolution\\Figure1\\Eran\\24.6\\nnls_cibersort_new\\geo\\nnls1"
@@ -146,11 +147,11 @@ if __name__ == "__main__1":
         name="nnls",
         save_normalize_graph=True,
     )
-    copy_and_create_graph(nnls_params2, True)
-    print("Start")
-    all_algo = [overfir_params, no_overfir_params, nnls_params, cibersort_params, gedit_params]
-    # copy_and_create_graph(overfir_params, True, True)
-    [copy_and_create_graph(algo, True, False) for algo in all_algo]
-
-    create_both_pbmc_graph(all_algo)
-    create_best_graph(all_algo)
+    # copy_and_create_graph(nnls_params2, True)
+    # print("Start")
+    # all_algo = [overfir_params, no_overfir_params, nnls_params, cibersort_params, gedit_params]
+    # # copy_and_create_graph(overfir_params, True, True)
+    # [copy_and_create_graph(algo, True, False) for algo in all_algo]
+    #
+    # create_both_pbmc_graph(all_algo)
+    create_best_graph([nnls_params2])

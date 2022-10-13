@@ -3,6 +3,7 @@ import pickle
 from pathlib import Path
 
 import torch
+from torch import optim
 
 from eran_new.dnmf_config import UnsupervisedLearner
 from eran_new.dnmf_config import UnsuperNetNew
@@ -10,7 +11,7 @@ from layers.unsuper_layer import UnsuperLayer
 
 import pathlib
 
-from eran_new.train import DnmfConfig, train_manager, handle_best
+from eran_new.train import DnmfConfig, train_manager, handle_best, _train_unsupervised
 
 
 def main():
@@ -62,17 +63,19 @@ def run_main(ref_folder, output_folder, mix_folder, dist_folder):
                             unsupervised_train=25000,
                             rewrite_exists_output=False,
                             total_sigs=total_sig,
+                            unsup_output_folder="f",
                             lr=0.005,
                         )
                         print(config.full_str())
-                        learner, loss34 = train_manager(config)
+                        train_manager(config)
 
 
-def run_main2(ref_folder, output_folder, mix_folder, dist_folder):
+def run_main2(ref_folder, output_folder, mix_folder, dist_folder, index, output_folder_for_results=None):
+    if output_folder_for_results is None:
+        output_folder_for_results = output_folder
     torch.autograd.set_detect_anomaly(True)
-    num_layers_options = [4, 5, 7]
-    supervised_trains = [50000, 80000]
-    total_sigs = [75, 50]
+    num_layers_options = [4]
+    supervised_trains = [20000, 40000, 60000]
 
     refs = []
     for filename in os.listdir(ref_folder):
@@ -81,59 +84,88 @@ def run_main2(ref_folder, output_folder, mix_folder, dist_folder):
     for filename in os.listdir(mix_folder):
         mixes.append(os.path.join(mix_folder, filename))
 
-    best_of_best_alg = None
-    best_of_best_loss = 2
-    best_alg = None
-    best_loss = 2
+    mix = mixes[index]
+    best_loss_ref = 2
+    best_nmf_ref = None
 
-    for mix in mixes:
-        loss_dict = {}
-        learners = {}
-        for ref_name in refs:
-            mix_p = Path(mix)
-            dist_path = Path(dist_folder) / f"TrueProps{mix_p.name}"
-            for num_layers_option in num_layers_options:
-                for supervised_train in supervised_trains:
-                    for total_sig in total_sigs:
-                        config = DnmfConfig(
-                            use_gedit=True,
-                            use_w0=True,
-                            w1_option="algo",
-                            output_folder=Path(output_folder),
-                            ref_path=Path(ref_name),
-                            mix_path=mix_p,
-                            dist_path=dist_path,
-                            num_layers=num_layers_option,
-                            supervised_train=4,
-                            unsupervised_train=2,
-                            rewrite_exists_output=False,
-                            total_sigs=total_sig,
-                            lr=0.005,
-                        )
-                        print(config.full_str())
-                        unsupervised_path = Path(str(config.output_path) + "GENERATED-UNsup.pkl")
-                        unsupervised_path_best = Path(str(config.output_path) + "GENERATED-UNsupB.pkl")
-                        with open(str(unsupervised_path), "rb") as input_file:
-                            checkpoint = pickle.load(input_file)
-                        loss = checkpoint["loss34"]
-                        if loss < best_loss:
-                            best_loss = loss
-                            best_alg = checkpoint["deep_nmf"]
-                            learner_best1 = train_manager(config, False)
-                            learner_best1.deep_nmf = best_alg
-                        with open(str(unsupervised_path_best), "rb") as input_file:
-                            checkpoint = pickle.load(input_file)
-                        loss = checkpoint["loss34"]
-                        if loss < best_of_best_loss:
-                            best_of_best_loss = loss
-                            best_of_best_alg = checkpoint["deep_nmf"]
-                            learner_best = train_manager(config, False)
-                            learner_best.deep_nmf = best_of_best_alg
+    best_of_best_loss_ref = 2
+    best_of_best_nmf_ref = None
 
-    print(f"best is {learner_best1.config.full_str()}")
-    print(f"best is {learner_best.config.full_str()}")
-    handle_best(learner_best1)
-    handle_best(learner_best)
+    for ref_name in refs:
+        best_of_best_loss = 2
+        best_loss = 2
+        learner_best1 = None
+        learner_best = None
+
+        mix_p = Path(mix)
+        dist_path = Path(dist_folder) / f"TrueProps{mix_p.name}"
+        for num_layers_option in num_layers_options:
+            for supervised_train in supervised_trains:
+                config = DnmfConfig(
+                    use_gedit=True,
+                    use_w0=True,
+                    w1_option="algo",
+                    output_folder=Path(output_folder),
+                    unsup_output_folder=Path(output_folder_for_results),
+                    ref_path=Path(ref_name),
+                    mix_path=mix_p,
+                    dist_path=dist_path,
+                    num_layers=num_layers_option,
+                    supervised_train=supervised_train,
+                    unsupervised_train=25000,
+                    rewrite_exists_output=False,
+                    total_sigs=50,
+                    lr=0.005,
+                )
+                print(config.full_str())
+                unsupervised_path = Path(str(config.output_path) + "GENERATED-UNsup_new_loss.pkl")
+                unsupervised_path_best = Path(str(config.output_path) + "GENERATED-UNsupB_new_loss.pkl")
+                if unsupervised_path.is_file():
+                    with open(str(unsupervised_path), "rb") as input_file:
+                        checkpoint = pickle.load(input_file)
+                    loss = checkpoint["loss34"]
+                    if loss < best_loss:
+                        best_loss = loss
+                        best_alg = checkpoint["deep_nmf"]
+                        learner_best1 = train_manager(config, False)
+                        learner_best1.deep_nmf = best_alg
+                        learner_best1.optimizer = optim.Adam(best_alg.parameters(), lr=config.lr)
+                if unsupervised_path_best.is_file():
+                    with open(str(unsupervised_path_best), "rb") as input_file:
+                        checkpoint = pickle.load(input_file)
+                    loss = checkpoint["loss34"]
+                    if loss < best_of_best_loss:
+                        best_of_best_loss = loss
+                        best_of_best_alg = checkpoint["deep_nmf"]
+                        learner_best = train_manager(config, False)
+                        learner_best.deep_nmf = best_of_best_alg
+                        learner_best.optimizer = optim.Adam(best_of_best_alg.parameters(), lr=config.lr)
+        if learner_best1 is not None:
+            learner_best1.config.unsupervised_train = 10000
+            learner_best.config.unsupervised_train = 10000
+            print(f"best is {learner_best1.config.full_str()}")
+            print(f"best is {learner_best.config.full_str()}")
+            _, out34, _, _, _, loss = _train_unsupervised(learner_best1)
+            if loss < best_loss_ref:
+                best_loss_ref = loss
+                best_nmf_ref = learner_best1, out34
+
+            _, out34, _, _, _, loss = _train_unsupervised(learner_best)
+            if loss < best_of_best_loss_ref:
+                best_of_best_loss_ref = loss
+                best_of_best_nmf_ref = learner_best, out34
+
+    print(f"best on all best ref is: {best_of_best_nmf_ref[0].config.full_str()}")
+    print(f"best on all ref is: {best_nmf_ref[0].config.full_str()}")
+
+    dist_new = best_nmf_ref[0].dist_mix_i.copy()
+    dist_new[:] = best_nmf_ref[1].cpu().detach().numpy()
+    dist_new.to_csv(best_nmf_ref[0].config.unsup_output_path, sep="\t")
+
+    dist_new = best_of_best_nmf_ref[0].dist_mix_i.copy()
+    dist_new[:] = best_of_best_nmf_ref[1].cpu().detach().numpy()
+    dist_new.to_csv(best_of_best_nmf_ref[0].config.unsup_output_path, sep="\t")
+    return
 
 
 if __name__ == "__main__1":
@@ -154,7 +186,7 @@ if __name__ == "__main__1":
         dist_path=dist_path,
         num_layers=4,
         supervised_train=50000,
-        unsupervised_train=25000,
+        unsupervised_train=15000,
         rewrite_exists_output=False,
         total_sigs=50,
         lr=0.005,

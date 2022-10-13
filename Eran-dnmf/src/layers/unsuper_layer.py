@@ -17,6 +17,7 @@ class UnsuperLayer(nn.Module):
         self.l_2 = l_2
         self.fc1 = nn.Linear(comp, comp, bias=False)
         self.fc2 = nn.Linear(features, comp, bias=False)
+        # linear: Applies a linear transformation to the incoming data: y = xA^T + b
         # self.softmax = nn.Softmax(1)
         # self.relu = nn.Tanh()
 
