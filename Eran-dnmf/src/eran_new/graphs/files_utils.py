@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 from typing import List
 
-from eran_new.graphs.config import overfir_params, no_overfir_params, nnls_params, cibersort_params, gedit_params
 from eran_new.graphs.graph_algorithm import GraphAlgorithm
 from eran_new.graphs.graphs import get_folder_graphs, create_graph, main_graph
 

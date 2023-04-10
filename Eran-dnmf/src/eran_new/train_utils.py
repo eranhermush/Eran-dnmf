@@ -90,4 +90,4 @@ def generate_new_w(Hi, Wi, V):
 def cost_tns(v, w, h, l_1=0, l_2=0):
     # util.cost_tns(data.v_train.tns,data.w.tns,data.h_train.tns)
     d = v - h.mm(w)
-    return (0.5 * torch.pow(d, 2).sum() + l_1 * h.sum() + 0.5 * l_2 * torch.pow(h, 2).sum()) / h.shape[0]
+    return (0.5 * torch.pow(d, 2).sum() + l_1 * h.sum() + 0.5 * l_2 * torch.pow(h, 2).sum()) / (v.shape[0] * v.shape[1])

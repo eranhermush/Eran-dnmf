@@ -136,7 +136,7 @@ if __name__ == "__main__":
     # NumSigs = 500
     folders = os.listdir(MIX_FOLDER)
     for folder in folders:
-        if folder[0] == '1':
+        if folder[0] == "1":
             mix = MIX_FOLDER + folder
             out = output + folder + "/gedit"
             os.makedirs(out, exist_ok=True)

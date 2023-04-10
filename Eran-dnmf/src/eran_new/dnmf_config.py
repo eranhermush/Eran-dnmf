@@ -39,6 +39,10 @@ class DnmfConfig:
         return self.output_folder / self.mix_path.name / self.ref_path.name / str(self.use_gedit) / f"{str(self)}.tsv"
 
     @property
+    def output_path_data(self):
+        return Path(self.output_folder / self.mix_path.name / self.ref_path.name / "data" / f"{str(self)}.tsv")
+
+    @property
     def unsup_output_path(self):
         return (
             Path(self.unsup_output_folder)
