@@ -198,15 +198,19 @@ def _train_unsupervised(learner: UnsupervisedLearner) -> Tuple[tensor, tensor, U
     best_34_obj = out
     best_i = 0
     loss = None
+    ref_mat_cuda = _tensoring(learner.ref).to(config.device).T
+
     for i in range(config.unsupervised_train):
         out = deep_nmf(*inputs)
 
-        features = mix_max.shape[1]
-        w_arrays = [nnls(out.data.numpy(), mix_max.T[f])[0] for f in range(features)]
-        nnls_w = np.stack(w_arrays, axis=-1)
-        dnmf_w = torch.from_numpy(nnls_w).float()
+        # features = mix_max.shape[1]
+        # w_arrays = [nnls(out.data.numpy(), mix_max.T[f])[0] for f in range(features)]
+        # nnls_w = np.stack(w_arrays, axis=-1)
+        # dnmf_w = torch.from_numpy(nnls_w).float()
 
-        loss = cost_tns(mix_max, dnmf_w, out, config.l1_regularization, config.l2_regularization)
+        # loss = cost_tns(mix_max, dnmf_w, out, config.l1_regularization, config.l2_regularization)
+        loss = cost_tns(mix_max, ref_mat_cuda, out, config.l1_regularization, config.l2_regularization)
+
         total_loss = loss
         optimizer.zero_grad()
         total_loss.backward()
@@ -340,7 +344,7 @@ def generate_data(
     data = TensorDataset(data_x, data_y, h_0_arr)
 
     dataloader = DataLoader(data, shuffle=True)
-    torch.save(dataloader, config.output_path_data)
+    # torch.save(dataloader, config.output_path_data)
 
     print(f"finish generate {datetime.now().strftime('%d-%m, %H:%M:%S')}")
     gc.collect()
@@ -356,10 +360,10 @@ def train_supervised(
     config: DnmfConfig,
     cells: List[str],
 ):
-    dataloader = generate_data(ref_mat, original_ref_mat, mix_max, cells, config.supervised_train // 3, config)
+    dataloader = generate_data(ref_mat, original_ref_mat, mix_max, cells, config.supervised_train, config)
     print("have data")
     criterion = nn.MSELoss(reduction="mean")
-    for j in range(3):
+    for j in range(1):
         i = 0
         for x, y, h_0 in dataloader:
             x = x[0]
